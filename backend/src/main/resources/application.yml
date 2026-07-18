@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: savemyseat
+  datasource:
+    url: jdbc:postgresql://localhost:5432/savemyseat
+    username: savemyseat
+    password: savemyseat
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    open-in-view: false
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+server:
+  port: 8080
