@@ -1,4 +1,4 @@
-package com.savemyseat.savemyseat;
+package com.savemyseat;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

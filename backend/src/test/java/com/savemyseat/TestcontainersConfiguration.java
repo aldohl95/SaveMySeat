@@ -1,4 +1,4 @@
-package com.savemyseat.savemyseat;
+package com.savemyseat;
 
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;

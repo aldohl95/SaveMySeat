@@ -1,20 +1,24 @@
-package com.savemyseat.savemyseat.entity;
+package com.savemyseat.entity;
 
-import com.savemyseat.savemyseat.enums.Role;
+import com.savemyseat.enums.Role;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.Generated;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.OffsetDateTime;
 
 
 @Entity
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 @Setter
 @Table(name = "users")
+@EntityListeners(AuditingEntityListener.class)
 public class User {
 
     @Id
@@ -40,18 +44,18 @@ public class User {
     @Enumerated(EnumType.STRING)
     private Role role;
 
-    @Column(name = "created_at", insertable = false, updatable = false)
-    //@Generated(GenerationTime.INSERT)
+    @Column(name = "created_at")
+    @CreatedDate
     private OffsetDateTime createdAt;
 
-    @Column(name = "updated_at", insertable = false, updatable = false)
-    //@Generated(GenerationTime.INSERT)
+    @Column(name = "updated_at")
+    @LastModifiedDate
     private OffsetDateTime updatedAt;
 
 
-    public User(Long id, String firstName, String lastName, String email,
+    public User(String firstName, String lastName, String email,
                 String passwordHash, Role role) {
-        this.id = id;
+
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
@@ -63,7 +67,7 @@ public class User {
     public boolean equals(Object o) {
         if (this == o) return true;
         if(!(o instanceof User)) return false;
-        return id == null && id.equals(((User) o).id);
+        return id != null && id.equals(((User) o).id);
     }
 
     @Override
