@@ -1,5 +1,5 @@
 package com.savemyseat.enums;
 
 public enum Role {
-    ATTENDEE, ORGANIZER, ADMINISTRATOR
+    ATTENDEE, ORGANIZER, ADMIN
 }
