@@ -49,7 +49,9 @@ public class TicketTierRepositoryTest {
         User u = new User("tasi", "mathias", "tasimathias@yexample.com",
                 "hash", Role.ORGANIZER);
         User organizer = userRepository.save(u);
-        Venue v = new Venue(organizer, "bar", "shadowbrook", "Oak harbor",
+        Venue v = new Venue(organizer, "bar","Description", "shadowbrook",
+                "Oak" +
+                " harbor",
                 "Wa", "98277");
         Venue venue = venueRepository.save(v);
         Event e = new Event(venue, "barhop", "hop some bars",
@@ -77,6 +79,7 @@ public class TicketTierRepositoryTest {
         User organizer = userRepository.save(new User("stella", "Mathias",
                 "stellamathias@example.com", "hash", Role.ORGANIZER));
         Venue venue = venueRepository.save(new Venue(organizer, "barh",
+                "Description",
                 "angela", "oak harbor", "Washington", "98277"));
         Event events = eventRepository.save(new Event(venue, "barhopping",
                 "hop some bars",OffsetDateTime.now(ZoneOffset.UTC),
@@ -97,7 +100,8 @@ public class TicketTierRepositoryTest {
         User organizer = userRepository.save(
                 new User("Sam", "Green", "oversell@example.com", "hash", Role.ORGANIZER));
         Venue venue = venueRepository.save(
-                new Venue(organizer, "Test Venue", "1 Main", "Seattle", "WA", "98101"));
+                new Venue(organizer, "Test Venue", "Description", "1 Main",
+                        "Seattle", "WA", "98101"));
         Event event = eventRepository.save(new Event(venue, "Test Event", "desc",
                 OffsetDateTime.now(ZoneOffset.UTC),
                 OffsetDateTime.now(ZoneOffset.UTC).plusHours(2),

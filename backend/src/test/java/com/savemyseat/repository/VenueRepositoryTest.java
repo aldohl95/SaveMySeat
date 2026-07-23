@@ -42,7 +42,9 @@ public class VenueRepositoryTest {
     User u = new User("Jack", "wade", "123@example.com", "123",
             Role.ORGANIZER);
     User organizer = userRepository.save(u);
-    Venue v = new Venue(organizer, "bar", "shadowbrook", "Oak Harbor",
+    Venue v = new Venue(organizer, "bar", "Descritpion",
+            "shadowbrook", "Oak " +
+            "Harbor",
             "Washington"
             , "98277");
     Venue saved = venueRepository.save(v);
@@ -65,8 +67,10 @@ public class VenueRepositoryTest {
       User organizer = userRepository.save(new User("Jane",
               "Doe", "jane@example.com", "hash", Role.ORGANIZER));
 
-      venueRepository.save(new Venue(organizer, "1 bar", "a", "b", "c", "2"));
-      venueRepository.save(new Venue(organizer, "2 bar", "b", "c", "d", "3"));
+      venueRepository.save(new Venue(organizer, "1 bar","description", "a",
+              "b", "c", "2"));
+      venueRepository.save(new Venue(organizer, "2 bar","Description","b", "c",
+              "d", "3"));
 
       List<Venue> found = venueRepository.findByOrganizer(organizer);
 

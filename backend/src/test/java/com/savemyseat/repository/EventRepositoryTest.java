@@ -46,7 +46,8 @@ public class EventRepositoryTest {
         User u = new User("Tevita", "james", "tj@example.com", "hash",
                 Role.ORGANIZER);
         User organizer = userRepository.save(u);
-        Venue v = new Venue(organizer, "BarName", "shadowbrrok", "Oakhardbor",
+        Venue v = new Venue(organizer, "BarName","d", "shadowbrrok",
+                "Oakhardbor",
                 "Washington", "98277");
         Venue tVenue = venueRepository.save(v);
         Event e = new Event(tVenue, "DateNight", "Find a date",
@@ -73,6 +74,7 @@ public class EventRepositoryTest {
         User organizer = userRepository.save(new User("Brene", "delarosa"
                 ,"ab@example.com", "hash", Role.ORGANIZER));
         Venue venue = venueRepository.save(new Venue(organizer, "Home",
+                "description",
                 "Shadowbrook", "Oak Harbor"
                 , "Washington", "98277"));
         Event event1 = eventRepository.save(new Event(venue, "DateNight",
@@ -96,6 +98,7 @@ public class EventRepositoryTest {
         User organizer = userRepository.save(new User("tim", "delarosa"
                 ,"tim@example.com", "hash", Role.ORGANIZER));
         Venue venue = venueRepository.save(new Venue(organizer, "bar2",
+                "descritpion",
                 "Shadowbrook", "Oak Harbor"
                 , "Washington", "98277"));
         Event draftEvent = eventRepository.save(new Event(venue, "DateNight",
