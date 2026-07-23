@@ -1,6 +1,5 @@
-package com.savemyseat.repository;
+package com.savemyseat.user;
 
-import com.savemyseat.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

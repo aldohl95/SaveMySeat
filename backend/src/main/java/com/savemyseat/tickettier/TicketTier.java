@@ -1,5 +1,6 @@
-package com.savemyseat.entity;
+package com.savemyseat.tickettier;
 
+import com.savemyseat.event.Event;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;

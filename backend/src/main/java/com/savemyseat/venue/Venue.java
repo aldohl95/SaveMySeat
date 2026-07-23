@@ -1,6 +1,7 @@
-package com.savemyseat.entity;
+package com.savemyseat.venue;
 
 
+import com.savemyseat.user.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;

@@ -1,4 +1,4 @@
-package com.savemyseat.dto;
+package com.savemyseat.venue.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

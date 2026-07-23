@@ -1,6 +1,5 @@
-package com.savemyseat.entity;
+package com.savemyseat.user;
 
-import com.savemyseat.enums.Role;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;

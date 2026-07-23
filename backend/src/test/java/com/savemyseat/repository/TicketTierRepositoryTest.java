@@ -1,11 +1,15 @@
 package com.savemyseat.repository;
 
-import com.savemyseat.entity.Event;
-import com.savemyseat.entity.TicketTier;
-import com.savemyseat.entity.User;
-import com.savemyseat.entity.Venue;
-import com.savemyseat.enums.EventStatus;
-import com.savemyseat.enums.Role;
+import com.savemyseat.event.Event;
+import com.savemyseat.tickettier.TicketTier;
+import com.savemyseat.event.EventRepository;
+import com.savemyseat.tickettier.TicketTierRepository;
+import com.savemyseat.user.User;
+import com.savemyseat.user.UserRepository;
+import com.savemyseat.venue.Venue;
+import com.savemyseat.event.EventStatus;
+import com.savemyseat.user.Role;
+import com.savemyseat.venue.VenueRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
@@ -39,10 +43,14 @@ public class TicketTierRepositoryTest {
         registry.add("spring.datasource.password", postgres::getPassword);
     }
 
-    @Autowired UserRepository userRepository;
-    @Autowired VenueRepository venueRepository;
-    @Autowired EventRepository eventRepository;
-    @Autowired TicketTierRepository ticketTierRepository;
+    @Autowired
+    UserRepository userRepository;
+    @Autowired
+    VenueRepository venueRepository;
+    @Autowired
+    EventRepository eventRepository;
+    @Autowired
+    TicketTierRepository ticketTierRepository;
 
     @Test
     void savesAndReadsBackTicketTier() {

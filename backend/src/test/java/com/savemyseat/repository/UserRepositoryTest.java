@@ -1,7 +1,8 @@
 package com.savemyseat.repository;
 
-import com.savemyseat.entity.User;
-import com.savemyseat.enums.Role;
+import com.savemyseat.user.User;
+import com.savemyseat.user.Role;
+import com.savemyseat.user.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
@@ -32,7 +33,8 @@ public class UserRepositoryTest {
     registry.add("spring.datasource.password", postgres::getPassword);
   }
 
-  @Autowired UserRepository userRepository;
+  @Autowired
+  UserRepository userRepository;
 
   @Test
   void savesAndReadsBackUser(){

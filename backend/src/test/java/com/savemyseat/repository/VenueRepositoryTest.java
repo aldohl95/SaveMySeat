@@ -1,9 +1,11 @@
 package com.savemyseat.repository;
 
 
-import com.savemyseat.entity.User;
-import com.savemyseat.entity.Venue;
-import com.savemyseat.enums.Role;
+import com.savemyseat.user.User;
+import com.savemyseat.user.UserRepository;
+import com.savemyseat.venue.Venue;
+import com.savemyseat.user.Role;
+import com.savemyseat.venue.VenueRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
@@ -15,7 +17,6 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.containers.PostgreSQLContainer;
 
 import java.util.List;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -34,8 +35,10 @@ public class VenueRepositoryTest {
     registry.add("spring.datasource.password", postgres::getPassword);
   }
 
-  @Autowired VenueRepository venueRepository;
-  @Autowired UserRepository userRepository;
+  @Autowired
+  VenueRepository venueRepository;
+  @Autowired
+  UserRepository userRepository;
 
   @Test
   void savesAndReadsBackVenue(){

@@ -1,8 +1,5 @@
-package com.savemyseat.repository;
+package com.savemyseat.event;
 
-import com.savemyseat.entity.Event;
-import com.savemyseat.entity.Venue;
-import com.savemyseat.enums.EventStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
