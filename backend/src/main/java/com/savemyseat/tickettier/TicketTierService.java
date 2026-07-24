@@ -7,6 +7,8 @@ import com.savemyseat.tickettier.dto.TicketTierResponse;
 import com.savemyseat.tickettier.dto.UpdateTicketTierRequest;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,6 +36,10 @@ public class TicketTierService {
 
     public TicketTierResponse getTicketTierById(Long ticketTierId){
         return ticketTierRepository.findById(ticketTierId).map(this::toResponse).orElseThrow(() -> new EntityNotFoundException("Ticket Tier not found: " + ticketTierId));
+    }
+
+    public Page<TicketTierResponse> listTicketTiers(Long eventId, Pageable pageable) {
+        return ticketTierRepository.findByEventId(eventId, pageable).map(this::toResponse);
     }
 
     @Transactional
