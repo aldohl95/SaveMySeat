@@ -12,6 +12,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.junit.jupiter.Container;
@@ -91,7 +93,8 @@ public class EventRepositoryTest {
                 "find some singles",OffsetDateTime.now(ZoneOffset.UTC),
                 OffsetDateTime.now(ZoneOffset.UTC).plusHours(2),
                 EventStatus.DRAFT ));
-        List<Event> found = eventRepository.findByVenueId(venue.getId());
+        Page<Event> found = eventRepository.findByVenueId(venue.getId(),
+                Pageable.unpaged());
 
         assertThat(found).hasSize(2);
 
@@ -117,7 +120,8 @@ public class EventRepositoryTest {
                 OffsetDateTime.now(ZoneOffset.UTC).plusHours(2),
                 EventStatus.PUBLISHED));
 
-        List<Event> drafts = eventRepository.findByStatus(EventStatus.DRAFT);
+        Page<Event> drafts = eventRepository.findByStatus(EventStatus.DRAFT,
+                Pageable.unpaged());
 
         assertThat(drafts).extracting(Event::getId).contains(draftEvent.getId());
         assertThat(drafts).extracting(Event::getId).doesNotContain(publishedEvent.getId());
