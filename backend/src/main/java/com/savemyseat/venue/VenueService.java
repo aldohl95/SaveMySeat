@@ -84,8 +84,8 @@ public class VenueService {
         return new VenueResponse(
                 venue.getId(),
                 venue.getOrganizer().getId(),
-                venue.getDescription(),
                 venue.getName(),
+                venue.getDescription(),
                 venue.getStreetName(),
                 venue.getCity(),
                 venue.getState(),
