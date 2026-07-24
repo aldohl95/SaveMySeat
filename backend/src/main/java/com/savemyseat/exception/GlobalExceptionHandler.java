@@ -2,6 +2,7 @@ package com.savemyseat.exception;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.parsing.Problem;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -44,6 +45,14 @@ public class GlobalExceptionHandler {
                 HttpStatus.CONFLICT,
                 "The request conflicts with existing data");
         return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ProblemDetail> handleIllegal(IllegalArgumentException ex){
+        ProblemDetail body =
+                ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,
+                        ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 
     @ExceptionHandler(Exception.class)
