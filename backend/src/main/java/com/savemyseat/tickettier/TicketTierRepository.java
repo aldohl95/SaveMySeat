@@ -1,7 +1,5 @@
-package com.savemyseat.repository;
+package com.savemyseat.tickettier;
 
-import com.savemyseat.entity.Event;
-import com.savemyseat.entity.TicketTier;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

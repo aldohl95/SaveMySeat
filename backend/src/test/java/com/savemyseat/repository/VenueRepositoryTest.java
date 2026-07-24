@@ -1,9 +1,11 @@
 package com.savemyseat.repository;
 
 
-import com.savemyseat.entity.User;
-import com.savemyseat.entity.Venue;
-import com.savemyseat.enums.Role;
+import com.savemyseat.user.User;
+import com.savemyseat.user.UserRepository;
+import com.savemyseat.venue.Venue;
+import com.savemyseat.user.Role;
+import com.savemyseat.venue.VenueRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
@@ -15,7 +17,6 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.containers.PostgreSQLContainer;
 
 import java.util.List;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -34,15 +35,19 @@ public class VenueRepositoryTest {
     registry.add("spring.datasource.password", postgres::getPassword);
   }
 
-  @Autowired VenueRepository venueRepository;
-  @Autowired UserRepository userRepository;
+  @Autowired
+  VenueRepository venueRepository;
+  @Autowired
+  UserRepository userRepository;
 
   @Test
   void savesAndReadsBackVenue(){
     User u = new User("Jack", "wade", "123@example.com", "123",
             Role.ORGANIZER);
     User organizer = userRepository.save(u);
-    Venue v = new Venue(organizer, "bar", "shadowbrook", "Oak Harbor",
+    Venue v = new Venue(organizer, "bar", "Descritpion",
+            "shadowbrook", "Oak " +
+            "Harbor",
             "Washington"
             , "98277");
     Venue saved = venueRepository.save(v);
@@ -65,8 +70,10 @@ public class VenueRepositoryTest {
       User organizer = userRepository.save(new User("Jane",
               "Doe", "jane@example.com", "hash", Role.ORGANIZER));
 
-      venueRepository.save(new Venue(organizer, "1 bar", "a", "b", "c", "2"));
-      venueRepository.save(new Venue(organizer, "2 bar", "b", "c", "d", "3"));
+      venueRepository.save(new Venue(organizer, "1 bar","description", "a",
+              "b", "c", "2"));
+      venueRepository.save(new Venue(organizer, "2 bar","Description","b", "c",
+              "d", "3"));
 
       List<Venue> found = venueRepository.findByOrganizer(organizer);
 

@@ -1,14 +1,19 @@
 package com.savemyseat.repository;
 
-import com.savemyseat.entity.Event;
-import com.savemyseat.entity.User;
-import com.savemyseat.entity.Venue;
-import com.savemyseat.enums.EventStatus;
-import com.savemyseat.enums.Role;
+import com.savemyseat.event.Event;
+import com.savemyseat.event.EventRepository;
+import com.savemyseat.user.User;
+import com.savemyseat.user.UserRepository;
+import com.savemyseat.venue.Venue;
+import com.savemyseat.event.EventStatus;
+import com.savemyseat.user.Role;
+import com.savemyseat.venue.VenueRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.junit.jupiter.Container;
@@ -17,7 +22,6 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -37,16 +41,20 @@ public class EventRepositoryTest {
         registry.add("spring.datasource.password", postgres::getPassword);
     }
 
-    @Autowired UserRepository userRepository;
-    @Autowired VenueRepository venueRepository;
-    @Autowired EventRepository eventRepository;
+    @Autowired
+    UserRepository userRepository;
+    @Autowired
+    VenueRepository venueRepository;
+    @Autowired
+    EventRepository eventRepository;
 
     @Test
     void savesAndReadsBackEvent(){
         User u = new User("Tevita", "james", "tj@example.com", "hash",
                 Role.ORGANIZER);
         User organizer = userRepository.save(u);
-        Venue v = new Venue(organizer, "BarName", "shadowbrrok", "Oakhardbor",
+        Venue v = new Venue(organizer, "BarName","d", "shadowbrrok",
+                "Oakhardbor",
                 "Washington", "98277");
         Venue tVenue = venueRepository.save(v);
         Event e = new Event(tVenue, "DateNight", "Find a date",
@@ -73,6 +81,7 @@ public class EventRepositoryTest {
         User organizer = userRepository.save(new User("Brene", "delarosa"
                 ,"ab@example.com", "hash", Role.ORGANIZER));
         Venue venue = venueRepository.save(new Venue(organizer, "Home",
+                "description",
                 "Shadowbrook", "Oak Harbor"
                 , "Washington", "98277"));
         Event event1 = eventRepository.save(new Event(venue, "DateNight",
@@ -84,7 +93,8 @@ public class EventRepositoryTest {
                 "find some singles",OffsetDateTime.now(ZoneOffset.UTC),
                 OffsetDateTime.now(ZoneOffset.UTC).plusHours(2),
                 EventStatus.DRAFT ));
-        List<Event> found = eventRepository.findByVenueId(venue.getId());
+        Page<Event> found = eventRepository.findByVenueId(venue.getId(),
+                Pageable.unpaged());
 
         assertThat(found).hasSize(2);
 
@@ -96,6 +106,7 @@ public class EventRepositoryTest {
         User organizer = userRepository.save(new User("tim", "delarosa"
                 ,"tim@example.com", "hash", Role.ORGANIZER));
         Venue venue = venueRepository.save(new Venue(organizer, "bar2",
+                "descritpion",
                 "Shadowbrook", "Oak Harbor"
                 , "Washington", "98277"));
         Event draftEvent = eventRepository.save(new Event(venue, "DateNight",
@@ -109,7 +120,8 @@ public class EventRepositoryTest {
                 OffsetDateTime.now(ZoneOffset.UTC).plusHours(2),
                 EventStatus.PUBLISHED));
 
-        List<Event> drafts = eventRepository.findByStatus(EventStatus.DRAFT);
+        Page<Event> drafts = eventRepository.findByStatus(EventStatus.DRAFT,
+                Pageable.unpaged());
 
         assertThat(drafts).extracting(Event::getId).contains(draftEvent.getId());
         assertThat(drafts).extracting(Event::getId).doesNotContain(publishedEvent.getId());

@@ -1,6 +1,7 @@
-package com.savemyseat.entity;
+package com.savemyseat.venue;
 
 
+import com.savemyseat.user.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -33,7 +34,8 @@ public class Venue {
 
   @Column(nullable = false)
   private String name;
-
+  @Column(nullable = true)
+  private String description;
   @Column(name = "street_name", nullable = false)
   private String streetName;
   @Column(nullable = false)
@@ -43,6 +45,7 @@ public class Venue {
   @Column(nullable = false)
   private String zip;
 
+
   @Column(name = "created_at")
   @CreatedDate
   private OffsetDateTime createdAt;
@@ -51,10 +54,13 @@ public class Venue {
   @LastModifiedDate
   private OffsetDateTime updatedAt;
 
-  public Venue(User organizer, String name, String streetName, String city,
+  public Venue(User organizer, String name, String description,
+               String streetName,
+               String city,
                String state, String zip) {
     this.organizer = organizer;
     this.name = name;
+    this.description = description;
     this.streetName = streetName;
     this.city = city;
     this.state = state;

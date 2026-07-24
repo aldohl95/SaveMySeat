@@ -1,6 +1,6 @@
-package com.savemyseat.entity;
+package com.savemyseat.event;
 
-import com.savemyseat.enums.EventStatus;
+import com.savemyseat.venue.Venue;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
