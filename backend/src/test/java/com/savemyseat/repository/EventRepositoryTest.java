@@ -58,7 +58,7 @@ public class EventRepositoryTest {
                 "Washington", "98277");
         Venue tVenue = venueRepository.save(v);
         Event e = new Event(tVenue, "DateNight", "Find a date",
-                OffsetDateTime.now(ZoneOffset.UTC),
+                OffsetDateTime.now(ZoneOffset.UTC).plusHours(1),
                 OffsetDateTime.now(ZoneOffset.UTC).plusHours(2),
                 EventStatus.DRAFT);
         Event saved = eventRepository.save(e);
