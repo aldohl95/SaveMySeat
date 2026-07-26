@@ -15,6 +15,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.junit.jupiter.Container;
@@ -96,8 +98,8 @@ public class TicketTierRepositoryTest {
         TicketTier tiers = ticketTierRepository.save(new TicketTier(events,
                 "General Admission", 1000, 100));
 
-        List<TicketTier> found =
-                ticketTierRepository.findByEventId(events.getId());
+        Page<TicketTier> found =
+                ticketTierRepository.findByEventId(events.getId(), Pageable.unpaged());
 
         assertThat(found).hasSize(1);
 
