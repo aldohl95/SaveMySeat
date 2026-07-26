@@ -1,5 +1,6 @@
 package com.savemyseat.exception;
 
+import com.savemyseat.auth.EmailAlreadyExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.parsing.Problem;
@@ -53,6 +54,12 @@ public class GlobalExceptionHandler {
                 ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,
                         ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    }
+
+    @ExceptionHandler(EmailAlreadyExistsException.class)
+    public ResponseEntity<ProblemDetail> handleEmailExists(EmailAlreadyExistsException ex) {
+        ProblemDetail body = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
     }
 
     @ExceptionHandler(Exception.class)
