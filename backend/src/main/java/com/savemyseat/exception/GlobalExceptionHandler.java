@@ -1,6 +1,7 @@
 package com.savemyseat.exception;
 
 import com.savemyseat.auth.EmailAlreadyExistsException;
+import com.savemyseat.auth.InvalidCredentialsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.parsing.Problem;
@@ -61,6 +62,15 @@ public class GlobalExceptionHandler {
         ProblemDetail body = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
     }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<ProblemDetail> handleInvalidCredentials(InvalidCredentialsException ex){
+            ProblemDetail body =
+                    ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED,
+                            ex.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
+    }
+
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ProblemDetail> handleUnexpected(Exception ex) {

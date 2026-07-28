@@ -1,5 +1,7 @@
 package com.savemyseat.auth;
 
+import com.savemyseat.auth.dto.AuthResponse;
+import com.savemyseat.auth.dto.LoginRequest;
 import com.savemyseat.auth.dto.RegisterRequest;
 import com.savemyseat.user.dto.UserResponse;
 import jakarta.validation.Valid;
@@ -22,6 +24,11 @@ public class AuthController {
     public ResponseEntity<UserResponse> createUser(@Valid @RequestBody RegisterRequest dto){
         UserResponse created = authService.createUser(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest dto){
+        return ResponseEntity.ok(authService.login(dto));
     }
 
 }

@@ -41,6 +41,10 @@ public class JwtService {
                 .getPayload();
     }
 
+    public long getExpirationSeconds(){
+        return jwtProperties.expirationHours() * 3600L;
+    }
+
     private SecretKey getSigningKey(){
         byte[] keyBytes = Decoders.BASE64.decode(jwtProperties.secret());
         return Keys.hmacShaKeyFor(keyBytes);

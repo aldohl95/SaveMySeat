@@ -1,7 +1,10 @@
 package com.savemyseat.auth;
 
 
+import com.savemyseat.auth.dto.AuthResponse;
+import com.savemyseat.auth.dto.LoginRequest;
 import com.savemyseat.auth.dto.RegisterRequest;
+import com.savemyseat.auth.JwtService;
 import com.savemyseat.user.Role;
 import com.savemyseat.user.User;
 import com.savemyseat.user.UserRepository;
@@ -11,6 +14,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+
+
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
 @Service
@@ -18,6 +23,7 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
     @Transactional
     public UserResponse createUser(RegisterRequest dto){
@@ -38,6 +44,25 @@ public class AuthService {
 
         );
         return toResponse(userRepository.save(user));
+    }
+
+    public AuthResponse login(LoginRequest dto){
+        String normalizedEmail = dto.email().toLowerCase();
+
+        User user = userRepository.findByEmail(normalizedEmail)
+                .filter(u -> passwordEncoder.matches(dto.password(), u.getPasswordHash()))
+                .orElseThrow(() -> new InvalidCredentialsException("Invalid " +
+                        "Credentials"));
+        String token = jwtService.generateToken(user);
+
+        return new AuthResponse(
+                token,
+                "Bearer",
+                jwtService.getExpirationSeconds(),
+                toResponse(user)
+        );
+
+
     }
 
     private UserResponse toResponse(User user){
