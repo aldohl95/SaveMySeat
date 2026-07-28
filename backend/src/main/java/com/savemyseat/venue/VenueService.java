@@ -9,6 +9,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +25,7 @@ public class VenueService {
     private final UserRepository userRepository;
 
     @Transactional
+    @PreAuthorize("hasRole('ORGANIZER')")
     public VenueResponse createVenue(CreateVenueRequest dto){
         //TODO(week-3): replace with security auth
         User organizer =
@@ -57,6 +59,7 @@ public class VenueService {
     }
 
     @Transactional
+    @PreAuthorize("hasRole('ORGANIZER')")
     public void deleteVenueById(Long venueId){
         if(!venueRepository.existsById(venueId)){
             throw new EntityNotFoundException("Venue not found: " + venueId);
@@ -65,6 +68,7 @@ public class VenueService {
     }
 
     @Transactional
+    @PreAuthorize("hasRole('ORGANIZER')")
     public VenueResponse updateVenue(Long venueId, UpdateVenueRequest dto){
         Venue venue =
                 venueRepository.findById(venueId).orElseThrow(() -> new EntityNotFoundException("Venue Not found: " + venueId));

@@ -1,10 +1,9 @@
 package com.savemyseat.exception;
 
-import com.savemyseat.auth.EmailAlreadyExistsException;
-import com.savemyseat.auth.InvalidCredentialsException;
+import com.savemyseat.auth.exception.EmailAlreadyExistsException;
+import com.savemyseat.auth.exception.InvalidCredentialsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.parsing.Problem;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;

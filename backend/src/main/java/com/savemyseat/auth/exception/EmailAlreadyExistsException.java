@@ -1,4 +1,4 @@
-package com.savemyseat.auth;
+package com.savemyseat.auth.exception;
 
 public class EmailAlreadyExistsException extends RuntimeException{
     public EmailAlreadyExistsException(String message){
