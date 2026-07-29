@@ -1,6 +1,7 @@
 package com.savemyseat.venue;
 
 import com.savemyseat.auth.CurrentUserProvider;
+import com.savemyseat.auth.exception.InvalidCredentialsException;
 import com.savemyseat.user.User;
 import com.savemyseat.user.UserRepository;
 import com.savemyseat.venue.dto.CreateVenueRequest;
@@ -10,9 +11,12 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Objects;
 
 
 @Service
@@ -58,17 +62,14 @@ public class VenueService {
     @Transactional
     @PreAuthorize("hasRole('ORGANIZER')")
     public void deleteVenueById(Long venueId){
-        if(!venueRepository.existsById(venueId)){
-            throw new EntityNotFoundException("Venue not found: " + venueId);
-        }
+        Venue venue = requireOwnedVenue(venueId);
         venueRepository.deleteById(venueId);
     }
 
     @Transactional
     @PreAuthorize("hasRole('ORGANIZER')")
     public VenueResponse updateVenue(Long venueId, UpdateVenueRequest dto){
-        Venue venue =
-                venueRepository.findById(venueId).orElseThrow(() -> new EntityNotFoundException("Venue Not found: " + venueId));
+        Venue venue = requireOwnedVenue(venueId);
 
         if (dto.name() != null) venue.setName(dto.name());
         if(dto.description() != null) venue.setDescription(dto.description());
@@ -78,6 +79,18 @@ public class VenueService {
         if(dto.zip() != null) venue.setZip(dto.zip());
 
         return toResponse(venueRepository.save(venue));
+    }
+
+    private Venue requireOwnedVenue(Long venueId){
+        Venue venue =
+                venueRepository.findById(venueId).orElseThrow(() -> new EntityNotFoundException("Venue not found: " + venueId));
+        if(!Objects.equals(venue.getOrganizer().getId(),
+                currentUserProvider.getCurrentUser().getId())){
+            throw new EntityNotFoundException("Venue not found: " + venueId);
+        }
+
+        return venue;
+
     }
 
 
