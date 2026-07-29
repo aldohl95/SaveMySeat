@@ -63,7 +63,7 @@ public class VenueService {
     @PreAuthorize("hasRole('ORGANIZER')")
     public void deleteVenueById(Long venueId){
         Venue venue = requireOwnedVenue(venueId);
-        venueRepository.deleteById(venueId);
+        venueRepository.delete(venue);
     }
 
     @Transactional
