@@ -1,5 +1,6 @@
 package com.savemyseat.venue;
 
+import com.savemyseat.auth.CurrentUserProvider;
 import com.savemyseat.user.User;
 import com.savemyseat.user.UserRepository;
 import com.savemyseat.venue.dto.CreateVenueRequest;
@@ -19,19 +20,15 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class VenueService {
 
-    private static final String STUB_ORGANIZER_EMAIL = "dev@savemyseat.local";
 
+    private final CurrentUserProvider currentUserProvider;
     private final VenueRepository venueRepository;
-    private final UserRepository userRepository;
 
     @Transactional
     @PreAuthorize("hasRole('ORGANIZER')")
     public VenueResponse createVenue(CreateVenueRequest dto){
-        //TODO(week-3): replace with security auth
-        User organizer =
-                userRepository.findByEmail(STUB_ORGANIZER_EMAIL).orElseThrow(()
-                        -> new IllegalStateException(
-                                "stub organizer missing -check v3 migration ran"));
+
+        User organizer = currentUserProvider.getCurrentUser();
 
         Venue venue = new Venue(
                 organizer,
