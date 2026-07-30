@@ -1,5 +1,6 @@
 package com.savemyseat.tickettier;
 
+import com.savemyseat.auth.CurrentUserProvider;
 import com.savemyseat.event.Event;
 import com.savemyseat.event.EventRepository;
 import com.savemyseat.tickettier.dto.CreateTicketTierRequest;
@@ -9,8 +10,11 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Objects;
 
 @Service
 @Transactional(readOnly = true)
@@ -19,11 +23,19 @@ public class TicketTierService {
 
     private final EventRepository eventRepository;
     private final TicketTierRepository ticketTierRepository;
+    private final CurrentUserProvider currentUserProvider;
 
     @Transactional
+    @PreAuthorize("hasRole('ORGANIZER')")
     public TicketTierResponse createTicketTier(CreateTicketTierRequest dto){
         Event event =
                 eventRepository.findById(dto.eventId()).orElseThrow(() -> new EntityNotFoundException("Event not found: " + dto.eventId()));
+
+        if(!Objects.equals(event.getVenue().getOrganizer().getId(),
+                currentUserProvider.getCurrentUser().getId())){
+            throw new EntityNotFoundException("Event not found: " + dto.eventId());
+        }
+
         TicketTier ticketTier = new TicketTier(
                 event,
                 dto.tierName(),
@@ -43,18 +55,17 @@ public class TicketTierService {
     }
 
     @Transactional
+    @PreAuthorize("hasRole('ORGANIZER')")
     public void deleteTicketTierById(Long ticketTierId){
-        if(!ticketTierRepository.existsById(ticketTierId)){
-            throw new EntityNotFoundException("Ticket Tier not found: " + ticketTierId);
-        }
-        ticketTierRepository.deleteById(ticketTierId);
+        TicketTier ticketTier = requireOwnedTicketTier(ticketTierId);
+        ticketTierRepository.delete(ticketTier);
     }
 
     @Transactional
+    @PreAuthorize("hasRole('ORGANIZER')")
     public TicketTierResponse updateTicketTier(Long ticketTierId,
                                                UpdateTicketTierRequest dto){
-        TicketTier ticketTier =
-                ticketTierRepository.findById(ticketTierId).orElseThrow(() -> new EntityNotFoundException("Ticket Tier not found: " + ticketTierId));
+        TicketTier ticketTier = requireOwnedTicketTier(ticketTierId);
 
         if(dto.tierName() != null) ticketTier.setTierName(dto.tierName());
         if(dto.priceCents() != null) ticketTier.setPriceCents(dto.priceCents());
@@ -67,6 +78,20 @@ public class TicketTierService {
         }
 
         return toResponse(ticketTierRepository.saveAndFlush(ticketTier));
+    }
+
+    private TicketTier requireOwnedTicketTier(Long ticketTierId){
+        TicketTier ticketTier = ticketTierRepository.findById(ticketTierId)
+                .orElseThrow(() -> new EntityNotFoundException("Ticket Tier " +
+                        "not found: " + ticketTierId));
+        Long ownerId = ticketTier.getEvent().getVenue().getOrganizer().getId();
+        Long currentUserId = currentUserProvider.getCurrentUser().getId();
+
+        if(!Objects.equals(ownerId,currentUserId)){
+            throw new EntityNotFoundException("TicketTier not found: " + ticketTierId);
+        }
+
+        return ticketTier;
     }
 
     private TicketTierResponse toResponse(TicketTier ticketTier){

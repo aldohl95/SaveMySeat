@@ -1,6 +1,7 @@
 package com.savemyseat.event;
 
 
+import com.savemyseat.auth.CurrentUserProvider;
 import com.savemyseat.event.dto.CreateEventRequest;
 import com.savemyseat.event.dto.EventResponse;
 import com.savemyseat.event.dto.UpdateEventRequest;
@@ -10,8 +11,11 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Objects;
 
 @Service
 @Transactional(readOnly = true)
@@ -19,11 +23,18 @@ import org.springframework.transaction.annotation.Transactional;
 public class EventService {
     private final VenueRepository venueRepository;
     private final EventRepository eventRepository;
+    private final CurrentUserProvider currentUserProvider;
 
     @Transactional
+    @PreAuthorize("hasRole('ORGANIZER')")
     public EventResponse createEvent(CreateEventRequest dto){
         Venue venue =
                 venueRepository.findById(dto.venueId()).orElseThrow(() -> new EntityNotFoundException("Venue not found: " + dto.venueId()));
+
+        if(!Objects.equals(venue.getOrganizer().getId(),
+                currentUserProvider.getCurrentUser().getId())){
+            throw new EntityNotFoundException("Venue not found: " + dto.venueId());
+        }
 
         Event event = new Event(
                 venue,
@@ -59,17 +70,17 @@ public class EventService {
     }
 
     @Transactional
+    @PreAuthorize("hasRole('ORGANIZER')")
     public void deleteEventById(Long eventId){
-        if(!eventRepository.existsById(eventId)){
-            throw new EntityNotFoundException("Event not found: " + eventId);
-        }
-        eventRepository.deleteById(eventId);
+        Event event = requireOwnedEvent(eventId);
+        eventRepository.delete(event);
     }
 
     @Transactional
+    @PreAuthorize("hasRole('ORGANIZER')")
     public EventResponse updateEvent(Long eventId, UpdateEventRequest dto){
-        Event event =
-                eventRepository.findById(eventId).orElseThrow(() -> new EntityNotFoundException("Event Not Found" + eventId));
+        Event event = requireOwnedEvent(eventId);
+
         if(dto.name() != null) event.setName(dto.name());
         if(dto.description() != null) event.setDescription(dto.description());
         if(dto.startsAt() != null) event.setStartsAt(dto.startsAt());
@@ -79,7 +90,19 @@ public class EventService {
         return toResponse(eventRepository.save(event));
     }
 
+    private Event requireOwnedEvent(Long eventId){
+        Event event =
+                eventRepository.findById(eventId).orElseThrow(() -> new EntityNotFoundException("Event not found: " + eventId));
 
+        Long ownerId = event.getVenue().getOrganizer().getId();
+        Long currentUserId = currentUserProvider.getCurrentUser().getId();
+
+        if(!Objects.equals(ownerId, currentUserId)){
+            throw new EntityNotFoundException("Event not found: " + eventId);
+        }
+
+        return event;
+    }
 
     private EventResponse toResponse(Event event){
         return new EventResponse(

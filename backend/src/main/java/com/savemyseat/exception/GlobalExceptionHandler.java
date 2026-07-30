@@ -1,8 +1,8 @@
 package com.savemyseat.exception;
 
+import com.savemyseat.auth.exception.*;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.parsing.Problem;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -53,6 +53,32 @@ public class GlobalExceptionHandler {
                 ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,
                         ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    }
+
+    @ExceptionHandler(EmailAlreadyExistsException.class)
+    public ResponseEntity<ProblemDetail> handleEmailExists(EmailAlreadyExistsException ex) {
+        ProblemDetail body = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<ProblemDetail> handleInvalidCredentials(InvalidCredentialsException ex){
+            ProblemDetail body =
+                    ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED,
+                            ex.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
+    }
+
+    @ExceptionHandler({
+            RefreshTokenNotFoundException.class,
+            RefreshTokenExpiredException.class,
+            RefreshTokenReusedException.class
+    })
+    public ResponseEntity<ProblemDetail> handleRefreshTokenFailures(RuntimeException ex) {
+        log.debug("Refresh token failure: {}", ex.getMessage());
+        ProblemDetail body = ProblemDetail.forStatusAndDetail(
+                HttpStatus.UNAUTHORIZED, "Invalid refresh token");
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
     }
 
     @ExceptionHandler(Exception.class)
