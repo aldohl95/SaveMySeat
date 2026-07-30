@@ -1,7 +1,6 @@
 package com.savemyseat.exception;
 
-import com.savemyseat.auth.exception.EmailAlreadyExistsException;
-import com.savemyseat.auth.exception.InvalidCredentialsException;
+import com.savemyseat.auth.exception.*;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -70,6 +69,17 @@ public class GlobalExceptionHandler {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
     }
 
+    @ExceptionHandler({
+            RefreshTokenNotFoundException.class,
+            RefreshTokenExpiredException.class,
+            RefreshTokenReusedException.class
+    })
+    public ResponseEntity<ProblemDetail> handleRefreshTokenFailures(RuntimeException ex) {
+        log.debug("Refresh token failure: {}", ex.getMessage());
+        ProblemDetail body = ProblemDetail.forStatusAndDetail(
+                HttpStatus.UNAUTHORIZED, "Invalid refresh token");
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
+    }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ProblemDetail> handleUnexpected(Exception ex) {

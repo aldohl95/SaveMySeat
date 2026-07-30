@@ -2,6 +2,7 @@ package com.savemyseat.auth;
 
 import com.savemyseat.auth.dto.AuthResponse;
 import com.savemyseat.auth.dto.LoginRequest;
+import com.savemyseat.auth.dto.RefreshRequest;
 import com.savemyseat.auth.dto.RegisterRequest;
 import com.savemyseat.user.dto.UserResponse;
 import jakarta.validation.Valid;
@@ -30,5 +31,11 @@ public class AuthController {
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest dto){
         return ResponseEntity.ok(authService.login(dto));
     }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<AuthResponse> refresh(@Valid @RequestBody RefreshRequest dto) {
+        return ResponseEntity.ok(authService.refresh(dto.refreshToken()));
+    }
+
 
 }

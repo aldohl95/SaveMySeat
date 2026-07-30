@@ -25,7 +25,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
-
+    private final RefreshTokenService refreshTokenService;
     @Transactional
     public UserResponse createUser(RegisterRequest dto){
         String normalizedEmail = dto.email().toLowerCase();
@@ -46,7 +46,7 @@ public class AuthService {
         );
         return toResponse(userRepository.save(user));
     }
-
+    @Transactional
     public AuthResponse login(LoginRequest dto){
         String normalizedEmail = dto.email().toLowerCase();
 
@@ -55,14 +55,27 @@ public class AuthService {
                 .orElseThrow(() -> new InvalidCredentialsException("Invalid " +
                         "Credentials"));
         String token = jwtService.generateToken(user);
-
+        TokenPair refreshPair =
+                refreshTokenService.createRefreshToken(user);
         return new AuthResponse(
                 token,
+                refreshPair.plainText(),
                 "Bearer",
                 jwtService.getExpirationSeconds(),
                 toResponse(user)
         );
-
+    }
+    @Transactional
+    public AuthResponse refresh(String refreshTokenPlainText){
+        RefreshRotationResult result =
+                refreshTokenService.rotate(refreshTokenPlainText);
+        return new AuthResponse(
+                jwtService.generateToken(result.user()),
+                result.newRefreshToken(),
+                "Bearer",
+                jwtService.getExpirationSeconds(),
+                toResponse(result.user())
+        );
 
     }
 
