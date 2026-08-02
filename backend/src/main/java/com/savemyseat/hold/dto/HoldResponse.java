@@ -6,7 +6,7 @@ import java.time.OffsetDateTime;
 
 public record HoldResponse(
         Long id,
-        Long tierid,
+        Long tierId,
         Integer quantity,
         HoldStatus status,
         OffsetDateTime expiresAt,
