@@ -1,6 +1,7 @@
 package com.savemyseat.exception;
 
 import com.savemyseat.auth.exception.*;
+import com.savemyseat.hold.InsufficientCapacityException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -80,6 +81,19 @@ public class GlobalExceptionHandler {
                 HttpStatus.UNAUTHORIZED, "Invalid refresh token");
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
     }
+
+    @ExceptionHandler(InsufficientCapacityException.class)
+    public ResponseEntity<ProblemDetail> handleInsufficientCapacity(InsufficientCapacityException ex) {
+        ProblemDetail body = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ProblemDetail> handleIllegalState(IllegalStateException ex) {
+        ProblemDetail body = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
+
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ProblemDetail> handleUnexpected(Exception ex) {

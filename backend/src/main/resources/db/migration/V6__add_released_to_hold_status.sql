@@ -1,0 +1,4 @@
+ALTER TABLE holds DROP CONSTRAINT check_status;
+
+ALTER TABLE holds ADD CONSTRAINT check_status
+    CHECK(status IN ('ACTIVE', 'EXPIRED', 'CONVERTED', 'RELEASED'));
