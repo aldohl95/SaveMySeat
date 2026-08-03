@@ -230,3 +230,163 @@ The long-term migration benefit is real, but at the current project stage it int
 **External identifier exposure becomes significant.** *Trigger:* Orders, reservations, or events become publicly exposed at a scale where sequential identifiers reveal sensitive business information or create unacceptable enumeration risk. *Potential change:* Introduce a public UUID identifier column while keeping `BIGINT` as the internal key, and expose the UUID through APIs while maintaining existing database relationships.
 
 **Offline record creation becomes required.** *Trigger:* A client or service must create records without contacting the primary database — for example, a mobile organizer application drafting events while disconnected, syncing later. *Potential change:* Move toward client-generated identifiers such as UUIDs.
+
+# ADR-003: Implementation Refinements to Hold and Checkout Concurrency
+
+## Status
+
+Accepted — 2026-08-03
+
+Supersedes portions of ADR-001 where implementation differs.
+
+## Context
+
+ADR-001 described the intended concurrency strategy for ticket reservations before implementation began. During development, several design decisions were simplified after evaluating the actual requirements of the application.
+
+The implementation preserves the primary architectural goals:
+
+- prevent overselling,
+- maintain PostgreSQL as the source of truth,
+- guarantee inventory consistency,
+- keep transactions short,
+
+while replacing several planned mechanisms with simpler implementations that better match the current scope of the system.
+
+This ADR documents those implementation decisions.
+
+## Decision
+
+### Hold Creation Uses Pessimistic Row Locking
+
+Instead of using a single conditional SQL UPDATE as described in ADR-001, hold creation now acquires a pessimistic row lock on the TicketTier using `SELECT ... FOR UPDATE`.
+
+The service performs the following steps inside one transaction:
+
+1. Acquire a row lock on the ticket tier.
+2. Calculate available inventory in application code.
+3. Reject the request if insufficient capacity exists.
+4. Increment the reserved counter.
+5. Persist the Hold.
+
+Because PostgreSQL serializes transactions waiting on the same row lock, only one transaction may modify a ticket tier's inventory at a time, preventing overselling.
+
+This approach trades one additional database round-trip for the ability to keep availability logic in Java, where it can evolve alongside other domain rules without changing the SQL statement.
+
+### Checkout Idempotency Uses Hold Uniqueness
+
+ADR-001 proposed a general-purpose `Idempotency-Key` infrastructure.
+
+The implementation instead guarantees that each Hold may only produce one Order.
+
+This is enforced by:
+
+- a unique constraint on `orders.hold_id`, and
+- a service-level lookup that checks whether an order already exists for the hold before attempting creation.
+
+This provides idempotent checkout behavior for the current domain model without requiring client-supplied idempotency keys or storage of previous responses.
+
+### Current Order Model Supports One Ticket Tier
+
+ADR-001 anticipated orders containing multiple ticket tiers.
+
+The implemented domain model intentionally limits each order to a single TicketTier.
+
+Consequently:
+
+- checkout acquires at most one ticket-tier lock,
+- lock ordering between multiple ticket tiers is unnecessary,
+- deadlock prevention is considerably simpler.
+
+Support for multiple ticket tiers may be introduced later through an OrderItem model if application requirements expand.
+
+### Deferred Features
+
+Several mechanisms described in ADR-001 were intentionally deferred because they are unnecessary for the current scale of the application.
+
+These include:
+
+- background expiration sweeper,
+- Redis inventory caching,
+- cache invalidation after commit,
+- retry policies for PostgreSQL deadlock and serialization failures.
+
+The current implementation remains correct without these features because inventory modifications occur inside short database transactions protected by pessimistic row locking.
+
+## Verification
+
+The concurrency defense is validated by an integration test (`HoldServiceConcurrencyTest.concurrentHoldsRespectCapacity`) that spawns 50 concurrent threads attempting to hold 1 ticket each from a tier with capacity 10.
+
+The test asserts that:
+
+- exactly 10 holds succeed,
+- the tier's `reserved` counter equals 10 after all threads complete,
+- the count of holds with status `ACTIVE` equals 10.
+
+All three independent measurements must agree for the test to pass. Running against a real PostgreSQL container (via Testcontainers), the test empirically confirms that the row-level lock serializes concurrent transactions and that the `reserved` counter cannot exceed `capacity`.
+
+## Alternatives Considered
+
+### Alternative 1: Retain the Conditional SQL UPDATE
+
+Continue using the original atomic SQL statement described in ADR-001.
+
+**Rejected because:** the pessimistic locking approach lets the entire check-and-write sequence live in Java, where the check condition can evolve (for example, adding user-level hold limits, per-tier discount rules, or dynamic pricing) without changing the SQL statement. The conditional UPDATE approach hard-codes the availability check into the WHERE clause, coupling business rules to SQL. The one extra round-trip is negligible at this scale, and the flexibility of Java-side logic is worth more than the round-trip savings.
+
+### Alternative 2: Implement Full Idempotency-Key Support
+
+Implement client-generated idempotency keys, request hashing, and response persistence.
+
+**Rejected because:** the application currently requires only one successful checkout per hold. A database uniqueness constraint provides the required guarantee with significantly less infrastructure. Full idempotency-key support becomes worthwhile when clients need to safely retry arbitrary operations (not just checkout), which is not a current requirement.
+
+### Alternative 3: Implement Deferred Infrastructure Immediately
+
+Complete Redis caching, expiration sweeping, and retry policies before releasing the feature.
+
+**Rejected because:** these mechanisms add operational complexity without addressing immediate functional requirements. They can be introduced incrementally as application scale demands. Building them speculatively risks over-engineering the current system.
+
+## Consequences
+
+### Positive
+
+- Prevents overselling through PostgreSQL row-level locking, empirically verified under 50-way contention.
+- Availability logic lives in Java, where it can evolve alongside other domain rules.
+- Idempotency is enforced structurally by a database constraint rather than by application-level infrastructure.
+- Integrates naturally with JPA entity management via `@Lock(LockModeType.PESSIMISTIC_WRITE)`.
+- Maintains PostgreSQL as the authoritative inventory source with no coordination across systems.
+
+### Negative
+
+- Hold creation issues two SQL statements (a locking `SELECT` and an `UPDATE` at commit) rather than one. In practice, this adds negligible latency because both operations use the same connection and the transaction holds the row lock for the same duration regardless of the check location.
+- Availability computation depends on the accuracy of the `reserved` counter, which currently drifts upward as holds expire without being swept.
+
+## Relationship to ADR-001
+
+ADR-001 established the overall architectural principles for inventory management:
+
+- PostgreSQL remains the source of truth.
+- Inventory is tracked using `capacity`, `reserved`, and `sold`.
+- Overselling must be impossible.
+- Hold creation and checkout execute within database transactions.
+
+This ADR refines the implementation details while preserving those principles.
+
+The primary differences are:
+
+| Area                    | ADR-001                                        | Implemented                                              |
+|-------------------------|------------------------------------------------|----------------------------------------------------------|
+| Hold creation           | Atomic conditional SQL UPDATE                  | `SELECT ... FOR UPDATE` followed by JPA entity update    |
+| Checkout idempotency    | Client `Idempotency-Key` infrastructure        | Unique `hold_id` constraint plus service-level check     |
+| Multi-tier orders       | Supported                                      | Deferred; one ticket tier per order                      |
+| Hold expiration         | Background sweeper                             | Deferred                                                 |
+| Redis caching           | Included                                       | Deferred                                                 |
+| Retry policy            | Automatic retries for 40P01 / 40001            | Deferred                                                 |
+
+## When to Revisit
+
+Reconsider this design when any of the following becomes true:
+
+- **Single-tier contention becomes a bottleneck.** If a popular event produces sustained contention on a single ticket tier row, the pessimistic lock will queue waiters. At sufficient scale, inventory could be partitioned across multiple counter rows selected via consistent hashing.
+- **Expired hold drift becomes user-visible.** If the `reserved` counter drifts far enough from actual reservations that legitimate purchases are frequently rejected with 409, the sweeper becomes necessary.
+- **Multi-tier orders are required.** Introducing an `OrderItem` model reopens the lock-ordering question described in ADR-001; the ascending-tier-id discipline should be re-established at that point.
+- **Redis is introduced for other purposes.** If caching becomes part of the stack (session storage, general query caching), reconsider whether inventory availability should be cached with commit-synchronized invalidation.
+- **Retry noise appears in production.** If deadlock or serialization failures surface, add the retry policy described in ADR-001.
