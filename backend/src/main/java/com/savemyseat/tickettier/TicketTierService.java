@@ -72,7 +72,7 @@ public class TicketTierService {
         if(dto.capacity() != null) {
             if (dto.capacity() < ticketTier.getReserved() + ticketTier.getSold()){
                 throw new IllegalArgumentException("Cannot reduce capacity " +
-                        "below" + (ticketTier.getReserved() + ticketTier.getSold()) + " tickets already reaserved or sold");
+                        "below" + (ticketTier.getReserved() + ticketTier.getSold()) + " tickets already reserved or sold");
             }
             ticketTier.setCapacity(dto.capacity());
         }
