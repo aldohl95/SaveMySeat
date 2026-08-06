@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    //404
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<ProblemDetail> handleNotFound(EntityNotFoundException ex){
         ProblemDetail body =
@@ -28,6 +29,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
     }
 
+    //400
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ProblemDetail> handleValidation(MethodArgumentNotValidException ex) {
         Map<String, String> fieldErrors =
@@ -39,6 +41,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 
+    //409
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ProblemDetail> handleConflict(DataIntegrityViolationException ex) {
         log.warn("Data integrity violation", ex);  // logged server-side, not returned
@@ -48,6 +51,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
     }
 
+    //400
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ProblemDetail> handleIllegal(IllegalArgumentException ex){
         ProblemDetail body =
@@ -56,12 +60,13 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 
+    //409
     @ExceptionHandler(EmailAlreadyExistsException.class)
     public ResponseEntity<ProblemDetail> handleEmailExists(EmailAlreadyExistsException ex) {
         ProblemDetail body = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
     }
-
+     //401
     @ExceptionHandler(InvalidCredentialsException.class)
     public ResponseEntity<ProblemDetail> handleInvalidCredentials(InvalidCredentialsException ex){
             ProblemDetail body =
@@ -70,6 +75,7 @@ public class GlobalExceptionHandler {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
     }
 
+    //401
     @ExceptionHandler({
             RefreshTokenNotFoundException.class,
             RefreshTokenExpiredException.class,
@@ -82,19 +88,21 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
     }
 
+    //409
     @ExceptionHandler(InsufficientCapacityException.class)
     public ResponseEntity<ProblemDetail> handleInsufficientCapacity(InsufficientCapacityException ex) {
         ProblemDetail body = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
     }
 
+    //409
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<ProblemDetail> handleIllegalState(IllegalStateException ex) {
         ProblemDetail body = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
     }
 
-
+    //500
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ProblemDetail> handleUnexpected(Exception ex) {
         log.error("Unexpected error", ex);
