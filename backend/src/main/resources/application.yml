@@ -22,5 +22,15 @@ security:
     secret: ${JWT_SECRET}
     expiration-hours: 24
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, prometheus
+
+  endpoint:
+    prometheus:
+      access: unrestricted
+
 server:
   port: 8080

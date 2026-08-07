@@ -6,6 +6,7 @@ import com.savemyseat.event.EventRepository;
 import com.savemyseat.tickettier.dto.CreateTicketTierRequest;
 import com.savemyseat.tickettier.dto.TicketTierResponse;
 import com.savemyseat.tickettier.dto.UpdateTicketTierRequest;
+import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
