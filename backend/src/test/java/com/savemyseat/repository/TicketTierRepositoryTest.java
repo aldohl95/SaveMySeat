@@ -24,13 +24,15 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.containers.PostgreSQLContainer;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.List;
+import com.savemyseat.JpaTestConfig;
+import org.springframework.context.annotation.Import;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DataJpaTest
 @Testcontainers
+@Import(JpaTestConfig.class)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 public class TicketTierRepositoryTest {
 
