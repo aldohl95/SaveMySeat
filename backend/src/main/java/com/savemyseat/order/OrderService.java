@@ -8,6 +8,8 @@ import com.savemyseat.hold.HoldStatus;
 import com.savemyseat.order.dto.CreateOrderRequest;
 import com.savemyseat.order.dto.OrderResponse;
 import com.savemyseat.user.User;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -27,41 +29,48 @@ public class OrderService {
     private final CurrentUserProvider currentUserProvider;
     private final HoldRepository holdRepository;
     private final HoldService holdService;
+    private final MeterRegistry registry;
 
     @Transactional
     public OrderResponse createOrder(CreateOrderRequest dto){
-        Hold hold =
-                holdRepository.findById(dto.holdId()).orElseThrow(() -> new EntityNotFoundException("Hold not found: " + dto.holdId()));
-        User currentUser = currentUserProvider.getCurrentUser();
+        Timer.Sample sample = Timer.start(registry);
+        try {
+            Hold hold =
+                    holdRepository.findById(dto.holdId()).orElseThrow(() -> new EntityNotFoundException("Hold not found: " + dto.holdId()));
+            User currentUser = currentUserProvider.getCurrentUser();
 
-        if(!Objects.equals(hold.getUser().getId(), currentUser.getId())){
-            throw new EntityNotFoundException("Hold not Found: " + hold.getId());
+            if (!Objects.equals(hold.getUser().getId(), currentUser.getId())) {
+                throw new EntityNotFoundException("Hold not Found: " + hold.getId());
+            }
+
+            if (hold.getStatus() != HoldStatus.ACTIVE) {
+                throw new IllegalStateException("Hold cannot be converted from " +
+                        "status: " + hold.getStatus());
+            }
+
+            if (OffsetDateTime.now(ZoneOffset.UTC).isAfter(hold.getExpiresAt())) {
+                throw new IllegalStateException("Hold has expired");
+            }
+
+            Optional<Order> existing = orderRepository.findByHoldId(hold.getId());
+            if (existing.isPresent()) {
+                return toResponse(existing.get());
+            }
+
+            long total =
+                    (hold.getQuantity() * hold.getTicketTier().getPriceCents());
+            Order order = new Order(
+                    currentUser,
+                    hold,
+                    hold.getTicketTier(),
+                    hold.getQuantity(),
+                    total
+            );
+            registry.counter("order.created").increment();
+            return toResponse(orderRepository.saveAndFlush(order));
+        }finally {
+            sample.stop(registry.timer("order.creation.time"));
         }
-
-        if(hold.getStatus() != HoldStatus.ACTIVE){
-            throw new IllegalStateException("Hold cannot be converted from " +
-                    "status: " + hold.getStatus());
-        }
-
-        if(OffsetDateTime.now(ZoneOffset.UTC).isAfter(hold.getExpiresAt())){
-            throw new IllegalStateException("Hold has expired");
-        }
-
-        Optional<Order> existing = orderRepository.findByHoldId(hold.getId());
-        if(existing.isPresent()){
-            return toResponse(existing.get());
-        }
-
-        long total =
-                (hold.getQuantity() * hold.getTicketTier().getPriceCents());
-        Order order = new Order(
-                currentUser,
-                hold,
-                hold.getTicketTier(),
-                hold.getQuantity(),
-                total
-        );
-        return toResponse(orderRepository.saveAndFlush(order));
     }
 
     public OrderResponse getOrderById(Long orderId){
@@ -79,25 +88,29 @@ public class OrderService {
 
     @Transactional
     public OrderResponse markPaid(Long orderId, String stripeSessionId){
-        Order order =
-                orderRepository.findById(orderId).orElseThrow(() -> new EntityNotFoundException("Order not found: " + orderId));
-        User currentUser = currentUserProvider.getCurrentUser();
+        Timer.Sample sample = Timer.start(registry);
+        try {
+            Order order =
+                    orderRepository.findById(orderId).orElseThrow(() -> new EntityNotFoundException("Order not found: " + orderId));
+            User currentUser = currentUserProvider.getCurrentUser();
 
-        if(!Objects.equals(order.getUser().getId(), currentUser.getId())){
-            throw new EntityNotFoundException("Order not found: " + orderId);
+            if (!Objects.equals(order.getUser().getId(), currentUser.getId())) {
+                throw new EntityNotFoundException("Order not found: " + orderId);
+            }
+
+            if (order.getStatus() != OrderStatus.PENDING) {
+                throw new IllegalStateException("Order cannot be processed from " +
+                        "status: " + order.getStatus());
+            }
+
+            order.setStatus(OrderStatus.PAID);
+            order.setStripeSessionId(stripeSessionId);
+            holdService.convertHold(order.getHold().getId());
+            registry.counter("orders.completed");
+            return toResponse(orderRepository.saveAndFlush(order));
+        }finally {
+            sample.stop(registry.timer("order.checkout.time"));
         }
-
-        if(order.getStatus() != OrderStatus.PENDING){
-            throw new IllegalStateException("Order cannot be processed from " +
-                    "status: " + order.getStatus());
-        }
-
-        order.setStatus(OrderStatus.PAID);
-        order.setStripeSessionId(stripeSessionId);
-        holdService.convertHold(order.getHold().getId());
-
-        return toResponse(orderRepository.saveAndFlush(order));
-
     }
 
     @Transactional
