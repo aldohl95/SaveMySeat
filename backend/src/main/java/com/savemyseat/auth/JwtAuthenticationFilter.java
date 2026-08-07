@@ -2,6 +2,7 @@ package com.savemyseat.auth;
 
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.MDC;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -28,12 +29,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         final String authorizationHeader = request.getHeader("Authorization");
 
-
-
-        if(authorizationHeader != null && authorizationHeader.startsWith(
-                "Bearer ")){
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
             String jwt = authorizationHeader.substring(7);
-            try{
+            try {
                 Claims claims = jwtService.parseToken(jwt);
                 String userId = claims.getSubject();
                 String role = claims.get("role", String.class);
@@ -45,13 +43,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 );
 
                 SecurityContextHolder.getContext().setAuthentication(auth);
+                MDC.put("userId", userId);
 
-            }catch (Exception ex){
+            } catch (Exception ex) {
                 logger.debug("Error parsing token from jwt: " + ex.getMessage());
             }
-
         }
 
-        filterChain.doFilter(request, response);
+        try {
+            filterChain.doFilter(request, response);
+        } finally {
+            MDC.clear();
+        }
     }
 }
