@@ -7,6 +7,8 @@ import com.savemyseat.event.dto.EventResponse;
 import com.savemyseat.event.dto.UpdateEventRequest;
 import com.savemyseat.venue.Venue;
 import com.savemyseat.venue.VenueRepository;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -24,28 +26,34 @@ public class EventService {
     private final VenueRepository venueRepository;
     private final EventRepository eventRepository;
     private final CurrentUserProvider currentUserProvider;
+    private final MeterRegistry registry;
 
     @Transactional
     @PreAuthorize("hasRole('ORGANIZER')")
     public EventResponse createEvent(CreateEventRequest dto){
-        Venue venue =
-                venueRepository.findById(dto.venueId()).orElseThrow(() -> new EntityNotFoundException("Venue not found: " + dto.venueId()));
+        Timer.Sample sample = Timer.start(registry);
+        try {
+            Venue venue =
+                    venueRepository.findById(dto.venueId()).orElseThrow(() -> new EntityNotFoundException("Venue not found: " + dto.venueId()));
 
-        if(!Objects.equals(venue.getOrganizer().getId(),
-                currentUserProvider.getCurrentUser().getId())){
-            throw new EntityNotFoundException("Venue not found: " + dto.venueId());
+            if (!Objects.equals(venue.getOrganizer().getId(),
+                    currentUserProvider.getCurrentUser().getId())) {
+                throw new EntityNotFoundException("Venue not found: " + dto.venueId());
+            }
+
+            Event event = new Event(
+                    venue,
+                    dto.name(),
+                    dto.description(),
+                    dto.startsAt(),
+                    dto.endsAt(),
+                    EventStatus.DRAFT
+            );
+            registry.counter("events.created");
+            return toResponse(eventRepository.save(event));
+        }finally{
+            sample.stop(registry.timer("event.creation.time"));
         }
-
-        Event event = new Event(
-                venue,
-                dto.name(),
-                dto.description(),
-                dto.startsAt(),
-                dto.endsAt(),
-                EventStatus.DRAFT
-        );
-
-        return toResponse(eventRepository.save(event));
     }
 
     public Page<EventResponse> listEvents(Long venueId,
@@ -85,7 +93,12 @@ public class EventService {
         if(dto.description() != null) event.setDescription(dto.description());
         if(dto.startsAt() != null) event.setStartsAt(dto.startsAt());
         if(dto.endsAt() != null) event.setEndsAt(dto.endsAt());
-        if(dto.status() != null) event.setStatus(dto.status());
+        if(dto.status() != null) {
+            event.setStatus(dto.status());
+            if(event.getStatus() == EventStatus.PUBLISHED){
+                registry.counter("event.published").increment();
+            }
+        }
 
         return toResponse(eventRepository.save(event));
     }

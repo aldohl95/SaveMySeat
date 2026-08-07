@@ -83,7 +83,7 @@ public class HoldService {
             registry.counter("holds.expired").increment();
             return toResponse(saved);
         }finally{
-            sample.stop(registry.timer("hold.expiration.time"));
+            sample.stop(registry.timer("hold.expiration.processing.time"));
         }
     }
 
