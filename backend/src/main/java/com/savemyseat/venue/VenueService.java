@@ -7,6 +7,8 @@ import com.savemyseat.user.UserRepository;
 import com.savemyseat.venue.dto.CreateVenueRequest;
 import com.savemyseat.venue.dto.UpdateVenueRequest;
 import com.savemyseat.venue.dto.VenueResponse;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -27,26 +29,29 @@ public class VenueService {
 
     private final CurrentUserProvider currentUserProvider;
     private final VenueRepository venueRepository;
+    private final MeterRegistry registry;
 
     @Transactional
     @PreAuthorize("hasRole('ORGANIZER')")
     public VenueResponse createVenue(CreateVenueRequest dto){
+        Timer.Sample sample = Timer.start(registry);
+        try {
+            User organizer = currentUserProvider.getCurrentUser();
+            Venue venue = new Venue(
+                    organizer,
+                    dto.name(),
+                    dto.description(),
+                    dto.streetName(),
+                    dto.city(),
+                    dto.state(),
+                    dto.zip()
+            );
 
-        User organizer = currentUserProvider.getCurrentUser();
-
-        Venue venue = new Venue(
-                organizer,
-                dto.name(),
-                dto.description(),
-                dto.streetName(),
-                dto.city(),
-                dto.state(),
-                dto.zip()
-        );
-
-
-        return toResponse(venueRepository.save(venue));
-
+            registry.counter("venues.created").increment();
+            return toResponse(venueRepository.save(venue));
+        }finally {
+            sample.stop(registry.timer("venue.creation.time"));
+        }
     }
 
     public Page<VenueResponse> listVenues(Pageable pageable){
