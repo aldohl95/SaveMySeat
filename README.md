@@ -1,2 +1,2 @@
 # SaveMySeat
-![CI](https://github.com/yourusername/yourrepo/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/aldohl95/SaveMySeat/actions/workflows/ci.yml/badge.svg)
