@@ -50,9 +50,9 @@ public class AuthService {
                     Role.ATTENDEE
 
             );
-
+            User saved = userRepository.save(user);
             registry.counter("users.created").increment();
-            return toResponse(userRepository.save(user));
+            return toResponse(saved);
         }finally {
             sample.stop(registry.timer("user.creation.time"));
         }
