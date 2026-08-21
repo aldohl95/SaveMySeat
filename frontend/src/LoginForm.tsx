@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { saveTokens } from './auth'
 
 type AuthResponse = {
   accessToken: string;
@@ -38,6 +39,7 @@ function LoginForm() {
       }
 
       const data : AuthResponse = await response.json();
+      saveTokens(data.accessToken, data.refreshToken)
       setUser(data.user)
       console.log('Access token:', data.accessToken);
     }catch(e){
