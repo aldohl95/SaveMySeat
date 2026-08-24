@@ -29,6 +29,7 @@ public class AuthService {
     private final JwtService jwtService;
     private final RefreshTokenService refreshTokenService;
     private final MeterRegistry registry;
+    private final CurrentUserProvider currentUserProvider;
 
     @Transactional
     public UserResponse createUser(RegisterRequest dto){
@@ -88,6 +89,10 @@ public class AuthService {
                 toResponse(result.user())
         );
 
+    }
+
+    public UserResponse getCurrentUser(){
+        return toResponse(currentUserProvider.getCurrentUser());
     }
 
     private UserResponse toResponse(User user){

@@ -71,7 +71,8 @@ public class SecurityConfig {
                             objectMapper.writeValue(response.getOutputStream(), problem);
                         }))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/auth/login",
+                                "/api/auth/register","/api/auth/refresh").permitAll()
                         .requestMatchers("/actuator/health").permitAll()
                         .requestMatchers("/actuator/prometheus").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**",
