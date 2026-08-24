@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { saveTokens } from './auth'
+import { apiRequest } from './api'
 
 type AuthResponse = {
   accessToken: string;
@@ -28,17 +29,10 @@ function LoginForm() {
     setLoading(true);
     setError(null);
     try{
-      const response = await fetch('http://localhost:8080/api/auth/login', {
+      const data = await apiRequest<AuthResponse>('/api/auth/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json'},
-        body: JSON.stringify({email,password}),
+        body: {email, password},
       });
-
-      if(!response.ok){
-        throw new Error('Invalid credentials');
-      }
-
-      const data : AuthResponse = await response.json();
       saveTokens(data.accessToken, data.refreshToken)
       setUser(data.user)
       console.log('Access token:', data.accessToken);
