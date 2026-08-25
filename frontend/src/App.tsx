@@ -1,10 +1,11 @@
-import LoginForm from './LoginForm'
+
 import { useEffect, useState } from 'react';
 import { apiRequest } from './api';
 import { getAccessToken, clearTokens } from './auth';
 import { Routes, Route, Navigate, Link } from 'react-router-dom';
 import LoginPage from './LoginPage';
 import HomePage from './HomePage';
+import VenuesPage from './VenuesPage';
 
 type User = {
   id: number,
@@ -46,21 +47,13 @@ function App() {
     return <div>Loading...</div>
   }
 
-  if(user){
-    return(
-      <div>
-        <h1>SaveMySeat</h1>
-        <h2>Welcome, {user?.firstName} {user?.lastName}!</h2>
-        <p>Role: {user?.role}</p>
-      </div>
-    )
-  }
-
 
   return (
     <div>
       <nav>
         <Link to="/">Home</Link>
+        <span> | </span>
+        <Link to="/venues">Venues</Link>
         {user ? (
           <>
             <span> | Signed in as {user.firstName}</span>
@@ -73,6 +66,7 @@ function App() {
       
       <Routes>
         <Route path="/" element={<HomePage user={user} />} />
+        <Route path="/venues" element={<VenuesPage />} />
         <Route
           path="/login"
           element={
