@@ -1,28 +1,26 @@
 import { useState } from 'react';
 import { saveTokens } from './auth'
 import { apiRequest } from './api'
+import type { User } from './types';
 
 type AuthResponse = {
   accessToken: string;
   refreshToken: string;
   tokenType: string;
   expiresIn: number;
-  user:{
-    id: number;
-    firstName: string;
-    lastName: string;
-    email: string;
-    role: string;
-  };
-
+  user: User;
 };
 
-function LoginForm() {
+type LoginFormProps = {
+  onLoginSuccess: (user: User) => void;
+}
+
+function LoginForm({onLoginSuccess}: LoginFormProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [user, setUser] = useState<AuthResponse['user'] | null>(null);
+
 
 
   async function handleSubmit(){
@@ -34,22 +32,12 @@ function LoginForm() {
         body: {email, password},
       });
       saveTokens(data.accessToken, data.refreshToken)
-      setUser(data.user)
-      console.log('Access token:', data.accessToken);
+      onLoginSuccess(data.user);
     }catch(e){
       setError(e instanceof Error ? e.message : 'Login failed');
     }finally{
       setLoading(false);
     }
-  }
-
-  if(user){
-    return(
-      <div>
-        <h2>Welcome, {user.firstName}!</h2>
-        <p>Role: {user.role}</p>
-      </div>
-    );
   }
 
   return (

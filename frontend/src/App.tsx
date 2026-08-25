@@ -2,6 +2,9 @@ import LoginForm from './LoginForm'
 import { useEffect, useState } from 'react';
 import { apiRequest } from './api';
 import { getAccessToken, clearTokens } from './auth';
+import { Routes, Route, Navigate, Link } from 'react-router-dom';
+import LoginPage from './LoginPage';
+import HomePage from './HomePage';
 
 type User = {
   id: number,
@@ -34,6 +37,11 @@ function App() {
     checkAuth();
   }, []);
 
+  function handleLogout(){
+    clearTokens();
+    setUser(null);
+  }
+
   if(loading){
     return <div>Loading...</div>
   }
@@ -51,8 +59,28 @@ function App() {
 
   return (
     <div>
-      <h1>SaveMySeat</h1>
-      <LoginForm />
+      <nav>
+        <Link to="/">Home</Link>
+        {user ? (
+          <>
+            <span> | Signed in as {user.firstName}</span>
+            <button onClick={handleLogout}>Log out</button>
+          </>
+        ) : (
+          <Link to="/login"> | Log in</Link>
+        )}
+      </nav>
+      
+      <Routes>
+        <Route path="/" element={<HomePage user={user} />} />
+        <Route
+          path="/login"
+          element={
+            user ? <Navigate to="/" /> : <LoginPage onLoginSuccess={setUser} />
+          }
+          />
+      </Routes>
+
     </div>
   );
 }
