@@ -1,18 +1,7 @@
 import { useEffect, useState } from 'react';
 import { apiRequest } from './api';
+import type { Venue } from './types';
 
-type Venue = {
-  id: number;
-  organizerId: number;
-  name: string;
-  description: string;
-  streetName: string;
-  city: string;
-  state: string;
-  zip: string;
-  createdAt: string;
-  updatedAt: string;
-}
 
 type PagedResponse<T> = {
   content: T[];

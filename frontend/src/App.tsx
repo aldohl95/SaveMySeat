@@ -6,6 +6,7 @@ import { Routes, Route, Navigate, Link } from 'react-router-dom';
 import LoginPage from './LoginPage';
 import HomePage from './HomePage';
 import VenuesPage from './VenuesPage';
+import EventsPage from './EventsPage';
 
 type User = {
   id: number,
@@ -54,6 +55,8 @@ function App() {
         <Link to="/">Home</Link>
         <span> | </span>
         <Link to="/venues">Venues</Link>
+        <span> | </span>
+        <Link to="/events">Events</Link>
         {user ? (
           <>
             <span> | Signed in as {user.firstName}</span>
@@ -67,6 +70,7 @@ function App() {
       <Routes>
         <Route path="/" element={<HomePage user={user} />} />
         <Route path="/venues" element={<VenuesPage />} />
+        <Route path="/events" element={<EventsPage />} />
         <Route
           path="/login"
           element={
