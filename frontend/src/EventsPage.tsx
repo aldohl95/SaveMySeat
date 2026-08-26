@@ -1,20 +1,9 @@
 import { useEffect, useState } from 'react';
 import { apiRequest } from './api';
-import type { Venue } from './types';
+import type { Venue , Event } from './types';
+import { Link } from 'react-router-dom';
 
-type EventStatus = 'DRAFT' | 'PUBLISHED' | 'CANCELLED';
 
-type Event = {
-  id: number;
-  venueId: number;
-  name: string;
-  description: string;
-  startsAt: string;
-  endsAt: string;
-  status: EventStatus;
-  createdAt: string;
-  updatedAt: string;
-}
 
 type PagedResponse<T> = {
   content: T[];
@@ -74,7 +63,7 @@ function EventsPage(){
           const venue = venueLookup[event.venueId];
           return (
             <li key={event.id}>
-              <h3>{event.name}</h3>
+              <h3><Link to={`/events/${event.id}`}>{event.name}</Link></h3>
               <p>{event.description}</p>
               <p>Starts at: {event.startsAt}</p>
               <p>Ends at: {event.endsAt} </p>

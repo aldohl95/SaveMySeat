@@ -32,6 +32,8 @@ function VenuesPage() {
     loadVenues();
   }, []);
 
+  
+
   if(loading){
     return <div>Loading Venues...</div>
   }

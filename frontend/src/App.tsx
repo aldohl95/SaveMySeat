@@ -7,6 +7,7 @@ import LoginPage from './LoginPage';
 import HomePage from './HomePage';
 import VenuesPage from './VenuesPage';
 import EventsPage from './EventsPage';
+import EventDetailPage from './EventDetailPage';
 
 type User = {
   id: number,
@@ -71,6 +72,7 @@ function App() {
         <Route path="/" element={<HomePage user={user} />} />
         <Route path="/venues" element={<VenuesPage />} />
         <Route path="/events" element={<EventsPage />} />
+        <Route path="/events/:id" element={<EventDetailPage />} />
         <Route
           path="/login"
           element={

@@ -20,3 +20,29 @@ export type Venue = {
   createdAt: string;
   updatedAt: string;
 }
+
+ export type EventStatus = 'DRAFT' | 'PUBLISHED' | 'CANCELLED';
+
+export type Event = {
+  id: number;
+  venueId: number;
+  name: string;
+  description: string;
+  startsAt: string;
+  endsAt: string;
+  status: EventStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type TicketTier = {
+    id: number;
+    eventId: number;
+    name: string;
+    priceCents: number;
+    capacity: number;
+    reserved: number;
+    sold: number;
+    createdAt: string;
+    updatedAt: string;
+};
