@@ -1,13 +1,6 @@
 import {useNavigate } from 'react-router-dom';
 import LoginForm from './LoginForm';
-
-type User = {
-  id: number;
-  firstName: string;
-  lastName: string;
-  email: string;
-  role: string;
-};
+import type { User } from './types';
 
 type LoginPageProps = {
   onLoginSuccess: (user: User) => void;

@@ -46,3 +46,15 @@ export type TicketTier = {
     createdAt: string;
     updatedAt: string;
 };
+
+export type HoldStatus = 'ACTIVE' | 'CONVERTED' | 'RELEASED' | 'EXPIRED'
+
+export type HoldResponse = {
+    id: number;
+    tierId: number;
+    quantity: number;
+    status: HoldStatus;
+    expiresAt: string;
+    createdAt: string;
+    updatedAt: string;
+};

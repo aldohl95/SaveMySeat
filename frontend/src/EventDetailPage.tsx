@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { apiRequest } from './api';
-import type { Venue , Event , TicketTier} from './types'
+import type { Venue , Event , TicketTier, User} from './types'
 import { useParams } from 'react-router-dom';
+import TierRow from './TierRow';
 
 type PagedResponse<T> = {
   content: T[];
@@ -11,7 +12,12 @@ type PagedResponse<T> = {
   size: number;
 }
 
-function EventDetailPage(){
+type EventDetailPageProps = {
+  user: User | null;
+}
+
+
+function EventDetailPage({user}: EventDetailPageProps){
   const { id } = useParams();
   const eventId = Number(id);
 
@@ -68,17 +74,9 @@ function EventDetailPage(){
         <p> No Ticket tiers yet.</p>
         ) : (
         <ul>
-          {tiers.map((tier) => {
-            const available = tier.capacity - tier.reserved - tier.sold;
-            const priceDollars = (tier.priceCents / 100).toFixed(2);
-            return(
-              <li key={tier.id}>
-                <h3>{tier.name}</h3>
-                <p>${priceDollars}</p>
-                <p>{available > 0 ? `${available} available` : 'Sold Out'}</p>
-              </li>
-            );
-          })}
+          {tiers.map((tier) => (
+            <TierRow key={tier.id} tier={tier} user={user}/>
+          ))}
         </ul>
       )}
     </div>
