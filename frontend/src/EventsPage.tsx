@@ -4,9 +4,6 @@ import type { Venue , Event, PagedResponse } from './types';
 import { Link } from 'react-router-dom';
 
 
-
-
-
 function EventsPage(){
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
