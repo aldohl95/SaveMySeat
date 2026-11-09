@@ -1,15 +1,9 @@
 import { useEffect, useState } from 'react';
 import { apiRequest } from './api';
-import type { Venue } from './types';
+import type { Venue,PagedResponse } from './types';
 
 
-type PagedResponse<T> = {
-  content: T[];
-  totalElements: number;
-  totalPages: number;
-  number: number;
-  size: number;
-}
+
 
 function VenuesPage() {
   const [venues, setVenues] = useState<Venue[]>([]);

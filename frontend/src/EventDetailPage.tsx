@@ -1,16 +1,9 @@
 import { useEffect, useState } from 'react';
 import { apiRequest } from './api';
-import type { Venue , Event , TicketTier, User} from './types'
+import type { Venue , Event , TicketTier, User, PagedResponse} from './types'
 import { useParams } from 'react-router-dom';
 import TierRow from './TierRow';
 
-type PagedResponse<T> = {
-  content: T[];
-  totalElements: number;
-  totalPages: number;
-  number: number;
-  size: number;
-}
 
 type EventDetailPageProps = {
   user: User | null;

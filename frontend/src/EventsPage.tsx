@@ -1,17 +1,11 @@
 import { useEffect, useState } from 'react';
 import { apiRequest } from './api';
-import type { Venue , Event } from './types';
+import type { Venue , Event, PagedResponse } from './types';
 import { Link } from 'react-router-dom';
 
 
 
-type PagedResponse<T> = {
-  content: T[];
-  totalElements: number;
-  totalPages: number;
-  number: number;
-  size: number;
-}
+
 
 function EventsPage(){
   const [events, setEvents] = useState<Event[]>([]);
