@@ -58,3 +58,18 @@ export type HoldResponse = {
     createdAt: string;
     updatedAt: string;
 };
+
+export type OrderStatus = 'PENDING' | 'REFUNDED' | 'CANCELLED' | 'PAID';
+
+export type OrderResponse = {
+    id: number;
+    userId: number;
+    holdId: number;
+    tierId: number;
+    quantity: number;
+    totalCents: number;
+    stripeSessionId: string;
+    status: OrderStatus;
+    createdAt: string;
+    updatedAt: string;
+};
