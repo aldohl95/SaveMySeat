@@ -17,10 +17,5 @@ class TestcontainersConfiguration {
                 "postgres:16-alpine"));
 	}
 
-	@Bean
-	@ServiceConnection(name = "redis")
-	GenericContainer<?> redisContainer() {
-		return new GenericContainer<>(DockerImageName.parse("redis:latest")).withExposedPorts(6379);
-	}
 
 }
