@@ -9,7 +9,7 @@ import VenuesPage from './VenuesPage';
 import EventsPage from './EventsPage';
 import EventDetailPage from './EventDetailPage';
 import type { User } from './types';
-
+import MyOrdersPage from './MyOrdersPage';
 
 function App() {
   const[user, setUser] = useState<User | null>(null);
@@ -54,6 +54,9 @@ function App() {
         <Link to="/events">Events</Link>
         {user ? (
           <>
+            <span> | </span>
+            <Link to="/my-orders">My Orders</Link>
+            <span> | </span>
             <span> | Signed in as {user.firstName}</span>
             <button onClick={handleLogout}>Log out</button>
           </>
@@ -67,6 +70,7 @@ function App() {
         <Route path="/venues" element={<VenuesPage />} />
         <Route path="/events" element={<EventsPage />} />
         <Route path="/events/:id" element={<EventDetailPage user={user}/>} />
+        <Route path="/my-orders" element={user ? <MyOrdersPage /> : <Navigate to="/login" />} />
         <Route
           path="/login"
           element={
