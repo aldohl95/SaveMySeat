@@ -12,6 +12,8 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -71,6 +73,12 @@ public class OrderService {
         }finally {
             sample.stop(registry.timer("order.creation.time"));
         }
+    }
+
+    @Transactional(readOnly = true)
+    public Page<OrderResponse> getMyOrders(Pageable pageable){
+        User currentUser = currentUserProvider.getCurrentUser();
+        return orderRepository.findByUserId(currentUser.getId(), pageable).map(this::toResponse);
     }
 
     public OrderResponse getOrderById(Long orderId){
