@@ -7,7 +7,7 @@ Built in Spring Boot 4 with Postgres 16 and Java 25, with a React + TypeScript f
 ## Live Demo
 
 - **API (Render):** https://savemyseat.onrender.com — Swagger UI at [`/swagger-ui.html`](https://savemyseat.onrender.com/swagger-ui.html), health at [`/actuator/health`](https://savemyseat.onrender.com/actuator/health)
-- **Frontend (Netlify):** _TODO: add Netlify URL_
+- **Frontend (Netlify):** https://savemyseat-app.netlify.app
 
 > The backend runs on Render's free tier and sleeps when idle, so the first request after a quiet period can take 30-60 seconds while it wakes up.
 
@@ -168,7 +168,7 @@ Login is bounded by BCrypt at work factor 10 (deliberately slow, security-critic
 - **API docs** at `/swagger-ui.html` for interactive endpoint exploration.
 - **Health check** at `/actuator/health`.
 
-Order history (`GET /api/orders`) is served by a composite index on `(user_id, created_at DESC)`. Active-hold lookups use partial indexes so the sweeper and per-user queries only touch live rows.
+Order history (`GET /api/orders`) is served by a composite index on `(user_id, created_at DESC)`. The hot paths use partial indexes: `holds` has partial indexes on `ACTIVE` rows (by tier and by user), and `orders` has partial indexes on `PENDING` and `PAID` rows (by user), so those queries only touch live rows.
 
 ## Frontend
 
