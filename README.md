@@ -17,7 +17,7 @@ Built in Spring Boot 4 with Postgres 16 and Java 25, with a React + TypeScript f
 
 ## Highlights
 
-- **Concurrency-safe inventory** via row-level pessimistic locking on the ticket tier. The crown-jewel test lives in [`HoldServiceConcurrencyTest`](backend/src/test/java/com/savemyseat/hold/HoldServiceConcurrencyTest.java).
+- **Concurrency-safe inventory** via row-level pessimistic locking on the ticket tier. The crown-jewel test lives in [`TicketTierServiceTest.concurrentHoldsRespectCapacity`](backend/src/test/java/com/savemyseat/service/TicketTierServiceTest.java).
 - **JWT authentication** with short-lived access tokens and rotating refresh tokens. Reuse of a consumed refresh token triggers a theft signal.
 - **Three-layer authorization**: route-level filtering, role-based `@PreAuthorize`, service-level ownership checks. Ownership failures return 404 identical to genuinely-missing resources — no enumeration.
 - **Production observability**: structured JSON logs with per-request user correlation via MDC, Prometheus metrics for business events and infrastructure, request timings per URI.
@@ -62,7 +62,7 @@ void concurrentHoldsRespectCapacity() {
 
 Three independent assertions must all agree for the test to pass. A locking bug that produced overselling would surface as any mismatch between them.
 
-[Full test](backend/src/test/java/com/savemyseat/hold/HoldServiceConcurrencyTest.java) · [Design decisions (ADR)](docs/ADR.md)
+[Full test](backend/src/test/java/com/savemyseat/service/TicketTierServiceTest.java) · [Design decisions (ADR)](docs/ADR.md)
 
 ## Architecture
 
