@@ -10,6 +10,7 @@ import EventsPage from './EventsPage';
 import EventDetailPage from './EventDetailPage';
 import type { User } from './types';
 import MyOrdersPage from './MyOrdersPage';
+import RegisterPage from './RegisterPage';
 
 function App() {
   const[user, setUser] = useState<User | null>(null);
@@ -61,7 +62,12 @@ function App() {
             <button onClick={handleLogout}>Log out</button>
           </>
         ) : (
-          <Link to="/login"> | Log in</Link>
+           <>
+          <span> | </span>
+          <Link to="/login">Log in</Link>
+          <span> | </span>
+          <Link to="/register">Sign up</Link>
+        </>
         )}
       </nav>
       
@@ -71,6 +77,7 @@ function App() {
         <Route path="/events" element={<EventsPage />} />
         <Route path="/events/:id" element={<EventDetailPage user={user}/>} />
         <Route path="/my-orders" element={user ? <MyOrdersPage /> : <Navigate to="/login" />} />
+        <Route path="/register"element={user ? <Navigate to="/" /> : <RegisterPage onRegisterSuccess={setUser} />}/>
         <Route
           path="/login"
           element={

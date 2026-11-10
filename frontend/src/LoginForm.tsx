@@ -1,15 +1,8 @@
 import { useState } from 'react';
 import { saveTokens } from './auth'
 import { apiRequest } from './api'
-import type { User } from './types';
+import type { User, AuthResponse } from './types';
 
-type AuthResponse = {
-  accessToken: string;
-  refreshToken: string;
-  tokenType: string;
-  expiresIn: number;
-  user: User;
-};
 
 type LoginFormProps = {
   onLoginSuccess: (user: User) => void;
