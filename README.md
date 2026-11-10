@@ -2,17 +2,28 @@
 
 A ticketing backend that handles concurrent ticket sales without overselling.
 
-Built in Spring Boot 4 with Postgres 16, Redis 7, and Java 25. Full purchase lifecycle: registration, JWT auth with refresh token rotation, venue and event management, and a two-phase hold-then-purchase model verified by an integration test that spawns 50 concurrent threads at a 10-ticket tier and asserts exactly 10 succeed.
+Built in Spring Boot 4 with Postgres 16 and Java 25, with a React + TypeScript frontend. Full purchase lifecycle: registration, JWT auth with refresh token rotation, venue and event management, and a two-phase hold-then-purchase model verified by an integration test that spawns 50 concurrent threads at a 10-ticket tier and asserts exactly 10 succeed.
+
+## Live Demo
+
+- **API (Render):** https://savemyseat.onrender.com — Swagger UI at [`/swagger-ui.html`](https://savemyseat.onrender.com/swagger-ui.html), health at [`/actuator/health`](https://savemyseat.onrender.com/actuator/health)
+- **Frontend (Netlify):** https://savemyseat-app.netlify.app
+
+> The backend runs on Render's free tier and sleeps when idle, so the first request after a quiet period can take 30-60 seconds while it wakes up.
+
+<!-- TODO: add a screenshot or GIF of browse -> hold -> pay -> My Orders -->
 
 [![CI](https://github.com/aldohl95/SaveMySeat/actions/workflows/ci.yml/badge.svg)](https://github.com/aldohl95/SaveMySeat/actions/workflows/ci.yml)
 
 ## Highlights
 
-- **Concurrency-safe inventory** via row-level pessimistic locking on the ticket tier. The crown-jewel test lives in [`HoldServiceConcurrencyTest`](backend/src/test/java/com/savemyseat/hold/HoldServiceConcurrencyTest.java).
+- **Concurrency-safe inventory** via row-level pessimistic locking on the ticket tier. The crown-jewel test lives in [`TicketTierServiceTest.concurrentHoldsRespectCapacity`](backend/src/test/java/com/savemyseat/service/TicketTierServiceTest.java).
 - **JWT authentication** with short-lived access tokens and rotating refresh tokens. Reuse of a consumed refresh token triggers a theft signal.
 - **Three-layer authorization**: route-level filtering, role-based `@PreAuthorize`, service-level ownership checks. Ownership failures return 404 identical to genuinely-missing resources — no enumeration.
 - **Production observability**: structured JSON logs with per-request user correlation via MDC, Prometheus metrics for business events and infrastructure, request timings per URI.
-- **Three ADRs** documenting the significant design decisions ([docs/adr/](docs/adr/)).
+- **Background hold sweeper** that releases expired holds safely against concurrent checkout via a conditional UPDATE on the hold row.
+- **Full-stack and deployed**: Dockerized backend on Render with managed Postgres, React + TypeScript SPA on Netlify, configuration entirely via environment variables.
+- **Architecture decision record** documenting the significant design decisions ([docs/ADR.md](docs/ADR.md)).
 - **Load-tested**: hold creation sustains 4,350 requests/second distributed across tiers on a laptop. Numbers in [`docs/PERF-NUMBERS.md`](docs/PERF-NUMBERS.md).
 
 ## The Concurrency Story
@@ -51,7 +62,7 @@ void concurrentHoldsRespectCapacity() {
 
 Three independent assertions must all agree for the test to pass. A locking bug that produced overselling would surface as any mismatch between them.
 
-[Full test](backend/src/test/java/com/savemyseat/hold/HoldServiceConcurrencyTest.java) · [Design decision (ADR-003)](docs/adr/003-hold-and-checkout-implementation.md)
+[Full test](backend/src/test/java/com/savemyseat/service/TicketTierServiceTest.java) · [Design decisions (ADR)](docs/ADR.md)
 
 ## Architecture
 
@@ -100,21 +111,11 @@ com.savemyseat/
 
 ## Design Decisions
 
-Three ADRs document the significant technical choices:
-
-- [ADR-001: Concurrency Control for Hold Creation and Checkout](docs/adr/001-concurrency-control.md) — Original plan for row-level locking and idempotency.
-- [ADR-002: Authorization Architecture](docs/adr/002-authorization.md) — Three-layer defense, fail-closed pattern, enumeration prevention.
-- [ADR-003: Implementation Refinements to Hold and Checkout Concurrency](docs/adr/003-hold-and-checkout-implementation.md) — Retrospective refinements after implementation.
-
-Two review documents summarize each phase:
-
-- [PHASE-1-REVIEW.md](docs/PHASE-1-REVIEW.md) — Data model, domain, initial CRUD.
-- [PHASE-2-SECURITY-REVIEW.md](docs/PHASE-2-SECURITY-REVIEW.md) — Authentication, authorization, and known deferred security features.
-- [PHASE-3-BACKEND-REVIEW.md](docs/PHASE-3-BACKEND-REVIEW.md) — Full technical review with interview preparation.
+Significant technical choices (row-level locking, idempotent checkout, the expiration sweeper, multi-tier lock ordering, deferred features) are recorded in [docs/ADR.md](docs/ADR.md).
 
 ## API
 
-Full OpenAPI spec at `/v3/api-docs`, interactive UI at `/swagger-ui.html` when the app is running.
+About 28 endpoints in total. Full OpenAPI spec at `/v3/api-docs`, interactive UI at `/swagger-ui.html` when the app is running.
 
 Key endpoints:
 
@@ -128,6 +129,7 @@ Key endpoints:
 | GET | `/api/events` | List events (public) |
 | POST | `/api/events` | Create event (organizer only, at owned venue) |
 | GET | `/api/tickettiers/{id}` | Get tier details (public) |
+| GET | `/api/orders` | List the current user's orders (paginated, newest first) |
 | POST | `/api/holds` | Reserve tickets under a short TTL |
 | DELETE | `/api/holds/{id}` | Release a hold before it expires |
 | POST | `/api/orders` | Convert a hold into a pending order |
@@ -166,6 +168,17 @@ Login is bounded by BCrypt at work factor 10 (deliberately slow, security-critic
 - **API docs** at `/swagger-ui.html` for interactive endpoint exploration.
 - **Health check** at `/actuator/health`.
 
+Order history (`GET /api/orders`) is served by a composite index on `(user_id, created_at DESC)`. The hot paths use partial indexes: `holds` has partial indexes on `ACTIVE` rows (by tier and by user), and `orders` has partial indexes on `PENDING` and `PAID` rows (by user), so those queries only touch live rows.
+
+## Frontend
+
+React + TypeScript (Vite) SPA in [`frontend/`](frontend/): register and login, browse venues and events, hold tickets on a tier, confirm a (simulated) payment, and view order history. Tokens are kept in `localStorage` (a known XSS trade-off versus httpOnly cookies). The API base URL comes from `VITE_API_BASE` at build time.
+
+## Deployment
+
+- **Backend**: multi-stage `backend/Dockerfile` (JDK build stage, JRE runtime stage, non-root user) deployed to Render, connected to Render Postgres through environment variables (`SPRING_DATASOURCE_*`, `JWT_SECRET`, `app.cors.allowed-origins`).
+- **Frontend**: Netlify, with `_redirects` for SPA routing.
+
 ## Testing
 
 Three layers:
@@ -187,7 +200,7 @@ CI runs unit and integration tests on every push via GitHub Actions.
 ### Run locally
 
 ```bash
-# Start Postgres and Redis
+# Start Postgres
 docker compose up -d
 
 # From the backend directory
@@ -227,22 +240,23 @@ k6 run hold-load-multi-tier.js
 Documented as intentional trade-offs, not oversights. Each has a designed solution.
 
 - **Real Stripe integration.** Currently `stripe_session_id` is a placeholder string. See ADR-003.
-- **Timing-attack defense on login.** Fast fail on unknown emails leaks existence via response time. Documented in PHASE-2-SECURITY-REVIEW.
+- **Timing-attack defense on login.** Fast fail on unknown emails leaks existence via response time.
 - **Rate limiting on auth.** Credential stuffing unmitigated at scale.
 - **Refresh token chain invalidation on theft.** Reuse detection rejects the request but doesn't recursively invalidate descendants.
 - **Multi-tier orders.** Currently one tier per order; multi-tier requires an `OrderItem` model with sorted lock acquisition per ADR-001.
 - **Email verification and password reset.** Both require email infrastructure.
-- **Redis inventory caching.** ADR-003 explicitly deferred in favor of Postgres-only.
+- **Redis inventory caching / rate limiting.** Deliberately not used; the Postgres row lock is the source of truth and the measured ceiling is well above expected load.
 
 ## Tech Stack
 
 - **Language**: Java 25
+- **Frontend**: React, TypeScript, Vite
+- **Hosting**: Render (API + Postgres), Netlify (frontend), Docker
 - **Framework**: Spring Boot 4.1
 - **Database**: Postgres 16
-- **Cache**: Redis 7 (running but not yet integrated)
 - **ORM**: JPA / Hibernate
 - **Migrations**: Flyway
-- **Auth**: jjwt 0.12
+- **Auth**: jjwt 0.13
 - **Metrics**: Micrometer + Prometheus
 - **Logs**: Logback + logstash-logback-encoder
 - **Testing**: JUnit 5, Testcontainers, k6
@@ -258,15 +272,13 @@ SaveMySeat/
 │   ├── src/main/resources/     # Configuration, migrations
 │   ├── src/test/java/          # Tests including concurrency test
 │   └── pom.xml
+├── frontend/                   # React + TypeScript SPA
 ├── docs/                       # Design documents
-│   ├── adr/                    # Architecture Decision Records
-│   ├── PHASE-1-REVIEW.md
-│   ├── PHASE-2-SECURITY-REVIEW.md
-│   ├── PHASE-3-BACKEND-REVIEW.md
+│   ├── ADR.md                  # Architecture Decision Record
 │   └── PERF-NUMBERS.md
 ├── loadtests/                  # k6 load test scripts
 ├── scripts/                    # Development utility scripts
 ├── .github/workflows/          # CI configuration
-├── docker-compose.yml          # Postgres + Redis
+├── docker-compose.yml          # Postgres
 └── README.md
 ```
