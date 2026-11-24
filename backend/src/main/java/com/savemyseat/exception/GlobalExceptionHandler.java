@@ -89,8 +89,6 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
     }
 
-    //403 — @PreAuthorize role denials (AuthorizationDeniedException extends
-    // AccessDeniedException). Without this, the catch-all below turns them into 500.
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ProblemDetail> handleAccessDenied(AccessDeniedException ex) {
         ProblemDetail body = ProblemDetail.forStatusAndDetail(

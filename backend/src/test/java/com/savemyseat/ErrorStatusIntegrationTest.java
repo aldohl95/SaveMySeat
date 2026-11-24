@@ -48,9 +48,6 @@ class ErrorStatusIntegrationTest {
 
     @Test
     void organizerCreatingVenueGets201() throws Exception {
-        // CurrentUserProvider parses the principal as a user id, so the organizer
-        // must exist in the database and the principal must be the bare id string,
-        // as JwtAuthenticationFilter sets it. @WithMockUser can't do either.
         User organizer = userRepository.save(new User("Org", "Anizer",
                 "org-" + UUID.randomUUID() + "@test.local", "hash", Role.ORGANIZER));
         var auth = new UsernamePasswordAuthenticationToken(
@@ -74,7 +71,6 @@ class ErrorStatusIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isBadRequest())
-                // Rejected by bean validation, not by the BCrypt encoder
                 .andExpect(jsonPath("$.errors.password").exists());
     }
 }
