@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { apiRequest } from './api';
 import { saveTokens } from './auth';
 import type { AuthResponse, User } from './types';
+import { ErrorAlert } from './ui';
 
 type RegisterPageProps = {
   onRegisterSuccess: (user: User) => void;
@@ -51,55 +52,81 @@ function RegisterPage({ onRegisterSuccess }: RegisterPageProps) {
   }
 
   return (
-    <div>
-      <h1>Create an account</h1>
-      <form onSubmit={handleSubmit}>
-        <div>
-          <input
-            type="text"
-            placeholder="First name"
-            value={firstName}
-            onChange={(e) => setFirstName(e.target.value)}
-            disabled={loading}
-            required
-          />
-        </div>
-        <div>
-          <input
-            type="text"
-            placeholder="Last name"
-            value={lastName}
-            onChange={(e) => setLastName(e.target.value)}
-            disabled={loading}
-            required
-          />
-        </div>
-        <div>
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            disabled={loading}
-            required
-          />
-        </div>
-        <div>
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            disabled={loading}
-            required
-            minLength={8}
-          />
-        </div>
-        <button type="submit" disabled={loading}>
-          {loading ? 'Creating account...' : 'Sign up'}
-        </button>
-        {error && <p style={{ color: 'red' }}>{error}</p>}
-      </form>
+    <div className="auth">
+      <div className="card auth-card">
+        <header>
+          <h1>Create your account</h1>
+          <p>Sign up to hold and buy tickets.</p>
+        </header>
+        <form className="form" onSubmit={handleSubmit}>
+          <div className="form-row">
+            <div className="field">
+              <label htmlFor="firstName">First name</label>
+              <input
+                id="firstName"
+                className="input"
+                type="text"
+                autoComplete="given-name"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                disabled={loading}
+                required
+              />
+            </div>
+            <div className="field">
+              <label htmlFor="lastName">Last name</label>
+              <input
+                id="lastName"
+                className="input"
+                type="text"
+                autoComplete="family-name"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                disabled={loading}
+                required
+              />
+            </div>
+          </div>
+          <div className="field">
+            <label htmlFor="email">Email</label>
+            <input
+              id="email"
+              className="input"
+              type="email"
+              autoComplete="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={loading}
+              required
+            />
+          </div>
+          <div className="field">
+            <label htmlFor="password">Password</label>
+            <input
+              id="password"
+              className="input"
+              type="password"
+              autoComplete="new-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={loading}
+              required
+              minLength={8}
+              maxLength={72}
+              aria-describedby="password-hint"
+            />
+            <span id="password-hint" className="field-hint">8 to 72 characters.</span>
+          </div>
+          {error && <ErrorAlert message={error} />}
+          <button type="submit" className="btn btn-primary btn-block btn-lg" disabled={loading}>
+            {loading ? 'Creating account…' : 'Create account'}
+          </button>
+        </form>
+        <p className="auth-footer">
+          Already have an account? <Link to="/login">Log in</Link>
+        </p>
+      </div>
     </div>
   );
 }
