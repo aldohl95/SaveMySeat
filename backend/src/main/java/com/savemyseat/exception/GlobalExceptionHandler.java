@@ -8,6 +8,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -86,6 +87,15 @@ public class GlobalExceptionHandler {
         ProblemDetail body = ProblemDetail.forStatusAndDetail(
                 HttpStatus.UNAUTHORIZED, "Invalid refresh token");
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
+    }
+
+    //403 — @PreAuthorize role denials (AuthorizationDeniedException extends
+    // AccessDeniedException). Without this, the catch-all below turns them into 500.
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ProblemDetail> handleAccessDenied(AccessDeniedException ex) {
+        ProblemDetail body = ProblemDetail.forStatusAndDetail(
+                HttpStatus.FORBIDDEN, "You do not have permission to perform this action");
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
     }
 
     //409
