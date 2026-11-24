@@ -93,6 +93,7 @@ function RegisterPage({ onRegisterSuccess }: RegisterPageProps) {
             disabled={loading}
             required
             minLength={8}
+            maxLength={72}
           />
         </div>
         <button type="submit" disabled={loading}>
