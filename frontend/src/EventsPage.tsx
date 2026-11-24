@@ -1,74 +1,42 @@
-import { useEffect, useState } from 'react';
-import { apiRequest } from './api';
-import type { Venue , Event, PagedResponse } from './types';
-import { Link } from 'react-router-dom';
+import EventCard from './EventCard';
+import { useEvents } from './useEvents';
+import { CalendarIcon } from './icons';
+import { EmptyState, ErrorState, Loading } from './ui';
+import { pluralize } from './format';
 
+function EventsPage() {
+  const { events, venues, loading, error } = useEvents();
 
-function EventsPage(){
-  const [events, setEvents] = useState<Event[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [venueLookup, setVenueLookup] = useState<Record<number, Venue>>({});
-
-  useEffect(() => {
-    async function loadData(){
-      setLoading(true);
-      setError(null);
-      try{
-        const [eventsData, venuesData] = await Promise.all([
-          apiRequest<PagedResponse<Event>>('/api/events'),
-          apiRequest<PagedResponse<Venue>>('/api/venues'),
-        ]);
-        setEvents(eventsData.content);
-        const lookup: Record<number, Venue> = {};
-        for (const venue of venuesData.content){
-          lookup[venue.id] = venue;
-        }
-        setVenueLookup(lookup);
-      }catch(e){
-        setError(e instanceof Error ? e.message : 'failed to load events');
-      }finally{
-        setLoading(false);
-      }
-    }
-    loadData();
-  }, []);
-
-
-  if(loading){
-    return <div>Loading Events...</div>
+  if (loading) {
+    return <Loading label="Loading events" />;
   }
 
-  if(error){
-    return <div style={{ color: 'red'}}>Error: {error}</div>
+  if (error) {
+    return <ErrorState message={error} />;
   }
 
-  if(events.length === 0){
-    return <div>No events yet!</div>
-  }
-  //TODO format dates
-  return(
-    <div>
-      <ul>
-        {events.map((event) => {
-          const venue = venueLookup[event.venueId];
-          return (
-            <li key={event.id}>
-              <h3><Link to={`/events/${event.id}`}>{event.name}</Link></h3>
-              <p>{event.description}</p>
-              <p>Starts at: {event.startsAt}</p>
-              <p>Ends at: {event.endsAt} </p>
-              {venue ? (
-                <p>{venue.streetName}, {venue.city}, {venue.state}</p>
-              ) : (
-                <p>Location unavailable</p>
-              )}
-            </li>
-          );
-        })}
-      </ul>
-    </div>
-  );  
+  return (
+    <>
+      <div className="page-header">
+        <div>
+          <h1>Events</h1>
+          <p>{events.length > 0 ? `${pluralize(events.length, 'event')} to choose from.` : 'Find your next night out.'}</p>
+        </div>
+      </div>
+
+      {events.length === 0 ? (
+        <EmptyState icon={<CalendarIcon size={22} />} title="No events yet">
+          <p>Check back soon. New events are added all the time.</p>
+        </EmptyState>
+      ) : (
+        <div className="grid">
+          {events.map((event) => (
+            <EventCard key={event.id} event={event} venue={venues[event.venueId]} />
+          ))}
+        </div>
+      )}
+    </>
+  );
 }
 
 export default EventsPage;
