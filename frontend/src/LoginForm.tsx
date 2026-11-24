@@ -16,7 +16,8 @@ function LoginForm({onLoginSuccess}: LoginFormProps) {
 
 
 
-  async function handleSubmit(){
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>){
+    e.preventDefault();
     setLoading(true);
     setError(null);
     try{
@@ -34,8 +35,7 @@ function LoginForm({onLoginSuccess}: LoginFormProps) {
   }
 
   return (
-    <div>
-      <h2>Log in</h2>
+    <form onSubmit={handleSubmit}>
       <div>
         <input
           type="email"
@@ -54,11 +54,11 @@ function LoginForm({onLoginSuccess}: LoginFormProps) {
           disabled={loading}
         />
       </div>
-      <button onClick={handleSubmit} disabled={loading}>
+      <button type="submit" disabled={loading}>
           {loading ? 'Logging in...' : 'Log in'}
       </button>
       {error && <p style={{ color: 'red'}}>{error}</p>}
-    </div>
+    </form>
   );
 
 }

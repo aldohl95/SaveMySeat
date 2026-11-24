@@ -7,7 +7,8 @@ type TierProps = {
     user: User | null;
 };
 
-function TierRow({ tier, user }: TierProps) {
+function TierRow({ tier: initialTier, user }: TierProps) {
+    const [tier, setTier] = useState(initialTier);
     const [quantity, setQuantity] = useState(1);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -17,6 +18,15 @@ function TierRow({ tier, user }: TierProps) {
     const available = tier.capacity - tier.reserved - tier.sold;
     const priceDollars = (tier.priceCents / 100).toFixed(2);
     const soldOut = available <= 0;
+
+    // Re-read the tier so the availability count reflects the server's state.
+    async function refreshTier() {
+        try {
+            setTier(await apiRequest<TicketTier>(`/api/tickettiers/${tier.id}`));
+        } catch {
+            // Keep the last known counts if the refresh fails.
+        }
+    }
 
     async function handleCreateHold() {
         setLoading(true);
@@ -30,6 +40,7 @@ function TierRow({ tier, user }: TierProps) {
         } catch (e) {
             setError(e instanceof Error ? e.message : 'Failed to create hold');
         } finally {
+            await refreshTier();
             setLoading(false);
         }
     }
@@ -55,6 +66,7 @@ function TierRow({ tier, user }: TierProps) {
         } catch (e) {
             setError(e instanceof Error ? e.message : 'Failed to confirm payment');
         } finally {
+            await refreshTier();
             setLoading(false);
         }
     }
@@ -69,13 +81,14 @@ function TierRow({ tier, user }: TierProps) {
         } catch (e) {
             setError(e instanceof Error ? e.message : 'Failed to cancel hold');
         } finally {
+            await refreshTier();
             setLoading(false);
         }
     }
 
     return (
         <li>
-            <h3>{tier.name}</h3>
+            <h3>{tier.tierName}</h3>
             <p>${priceDollars}</p>
             <p>{soldOut ? 'Sold Out' : `${available} available`}</p>
 
