@@ -18,7 +18,11 @@ public record RegisterRequest(
         String email,
 
         @NotBlank
-        @Size(min = 8)
+        // BCrypt only uses the first 72 bytes. This counts characters, so a
+        // multibyte password can still exceed 72 bytes; the encoder rejects
+        // those and GlobalExceptionHandler maps that to 400.
+        @Size(min = 8, max = 72,
+                message = "Password must be between 8 and 72 characters")
         String password
 ) {
 }
