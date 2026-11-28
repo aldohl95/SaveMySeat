@@ -5,6 +5,7 @@ import com.savemyseat.auth.exception.RefreshTokenNotFoundException;
 import com.savemyseat.auth.exception.RefreshTokenReusedException;
 import com.savemyseat.user.User;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.antlr.v4.runtime.Token;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +18,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Base64;
 
+@Slf4j
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -52,6 +54,8 @@ public class RefreshTokenService {
         }
 
         if(token.getUsedAt() != null){
+            log.warn("Refresh token reuse detected: userId={}, tokenId={}",
+                    token.getUser().getId(), token.getId());
             throw new RefreshTokenReusedException("Invalid Token");
         }
         token.setUsedAt(OffsetDateTime.now());
